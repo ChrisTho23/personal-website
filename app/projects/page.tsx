@@ -20,9 +20,9 @@ export default async function ProjectsPage() {
     return acc;
   }, {} as Record<string, number>);
 
-  const featured = allProjects.find((project) => project.slug === "unkey")!;
-  const top2 = allProjects.find((project) => project.slug === "planetfall")!;
-  const top3 = allProjects.find((project) => project.slug === "highstorm")!;
+  const featured = allProjects.find((project) => project.slug === "DrakeGPT")!;
+  const top2 = allProjects.find((project) => project.slug === "restaurant-recommender")!;
+  const top3 = allProjects.find((project) => project.slug === "anomaly-detection")!;
   const sorted = allProjects
     .filter((p) => p.published)
     .filter(
@@ -46,7 +46,8 @@ export default async function ProjectsPage() {
             Projects
           </h2>
           <p className="mt-4 text-zinc-400">
-            Some of the projects are from work and some are on my own time.
+            Find below an overview of projects I have worked on. By clicking on
+            the project cards, you can read more about the projects.
           </p>
         </div>
         <div className="w-full h-px bg-zinc-800" />
