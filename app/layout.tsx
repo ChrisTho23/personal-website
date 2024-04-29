@@ -1,19 +1,19 @@
 import "../global.css";
 import { Inter } from "@next/font/google";
-import LocalFont from "@next/font/local";
+import LocalFont from "next/font/local";
 import { Metadata } from "next";
 import { Analytics } from "./components/analytics";
 
 export const metadata: Metadata = {
   title: {
-    default: "chronark.com",
-    template: "%s | chronark.com",
+    default: "ct.com",
+    template: "%s | ct.com",
   },
-  description: "Co-founder of unkey.dev and founder of planetfall.io",
+  description: "Tech-optimist, AI-enthusiast, Sports freak, foodie, and aspiring Entrepreneur",
   openGraph: {
     title: "chronark.com",
     description:
-      "Co-founder of unkey.dev and founder of planetfall.io",
+      "Tech-optimist, AI-enthusiast, Sports freak, Foodie, and aspiring Entrepreneur",
     url: "https://chronark.com",
     siteName: "chronark.com",
     images: [
