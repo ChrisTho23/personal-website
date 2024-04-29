@@ -11,16 +11,16 @@ export const metadata: Metadata = {
   },
   description: "Tech-optimist, AI-enthusiast, Sports freak, foodie, and aspiring Entrepreneur",
   openGraph: {
-    title: "chronark.com",
+    title: "christophethomassin.com",
     description:
       "Tech-optimist, AI-enthusiast, Sports freak, Foodie, and aspiring Entrepreneur",
-    url: "https://chronark.com",
-    siteName: "chronark.com",
+    url: "https://christophethomassin.com",
+    siteName: "christophethomassin.com",
     images: [
       {
-        url: "https://chronark.com/og.png",
+        url: "https://christophethomassin.com/ct.jpg",
         width: 1920,
-        height: 1080,
+        height: 1920,
       },
     ],
     locale: "en-US",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     },
   },
   twitter: {
-    title: "Chronark",
+    title: "ChristopheThomassin",
     card: "summary_large_image",
   },
   icons: {
