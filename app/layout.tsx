@@ -3,6 +3,7 @@ import { Inter } from "@next/font/google";
 import LocalFont from "next/font/local";
 import { Metadata } from "next";
 import { Analytics } from "./components/analytics";
+import ChatBot from './components/chatbot';
 
 export const metadata: Metadata = {
   title: {
@@ -70,6 +71,7 @@ export default function RootLayout({
           }`}
       >
         {children}
+        <ChatBot />
       </body>
     </html>
   );
