@@ -1,5 +1,6 @@
 import { streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
+import systemMessage from '../../util/prompt';
 
 export const config = {
     runtime: 'edge',
@@ -10,7 +11,7 @@ export default async function handler(req: Request) {
 
     const result = await streamText({
         model: openai('gpt-3.5-turbo'),
-        system: 'You are a helpful assistant.',
+        system: systemMessage,
         messages,
     });
 
