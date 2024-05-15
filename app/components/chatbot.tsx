@@ -59,7 +59,7 @@ const ChatBot = () => {
                             onChange={handleInputChange}
                             className="flex-1 h-12 p-2 border border-zinc-800 rounded-full resize-none ml-2 bg-zinc-600 text-white placeholder-zinc-400 flex items-center"
                             placeholder="Type your message..."
-                            rows="1"
+                            rows={1}
                             style={{ display: 'flex', alignItems: 'center' }}
                         />
                         <button type="submit" className="ml-2 bg-gradient-to-tl from-zinc-100/55 via-zinc-100 to-zinc-100/55 text-black h-12 px-4 rounded-full flex items-center justify-center">
