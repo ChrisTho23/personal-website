@@ -50,7 +50,7 @@ export default async function ProjectsPage() {
             the project cards, you can read more about the projects.
           </p>
         </div>
-        <div className="w-full h-px bg-zinc-800" />
+        <div className="w-full h-px bg-zinc-600" />
 
         <div className="grid grid-cols-1 gap-8 mx-auto lg:grid-cols-2 ">
           <Card>
