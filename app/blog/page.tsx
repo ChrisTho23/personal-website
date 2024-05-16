@@ -14,7 +14,7 @@ export const revalidate = 60;
 export default async function BlogPage() {
   const views = (
     await redis.mget<number[]>(
-      ...allBlogs.map((b) => ["pageviews", "blogs", b.slug].join(":")),
+      ...allBlogs.map((b) => ["pageviews", "blog", b.slug].join(":")),
     )
   ).reduce((acc, v, i) => {
     acc[allBlogs[i].slug] = v ?? 0;
@@ -47,7 +47,7 @@ export default async function BlogPage() {
         <div className="flex flex-col gap-8 mx-auto lg:mx-0">
           {sortedBlogs.map((blog) => (
             <Card key={blog.slug}>
-              <Link href={`/blogs/${blog.slug}`}>
+              <Link href={`/blog/${blog.slug}`}>
                 <article className="relative w-full h-full p-4 md:p-8">
                   <div className="flex items-center justify-between gap-2">
                     <div className="text-xs text-zinc-100">

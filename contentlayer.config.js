@@ -48,7 +48,7 @@ export const Project = defineDocumentType(() => ({
 
 export const Blog = defineDocumentType(() => ({
   name: "Blog",
-  filePathPattern: "./blogs/**/*.mdx",
+  filePathPattern: "./blog/**/*.mdx",
   contentType: "mdx",
 
   fields: {
@@ -66,6 +66,9 @@ export const Blog = defineDocumentType(() => ({
     date: {
       type: "date",
     },
+    picture: { 
+      type: 'string',
+    }
   },
   computedFields,
 }));

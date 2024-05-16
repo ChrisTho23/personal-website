@@ -9,7 +9,7 @@ type Props = {
 
 export const Post: React.FC<Props> = ({ blog, views }) => {
   return (
-    <Link href={`/blogs/${blog.slug}`}>
+    <Link href={`/blog/${blog.slug}`}>
       <article className="relative p-4 md:p-8 border border-gray-800 rounded-lg">
         <div className="flex justify-between gap-2 items-center">
           <span className="text-xs duration-1000 text-zinc-200 group-hover:text-white group-hover:border-zinc-200 drop-shadow-orange">

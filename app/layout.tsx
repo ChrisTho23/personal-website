@@ -10,11 +10,11 @@ export const metadata: Metadata = {
     default: "christophethomassin.com",
     template: "%s | christophethomassin.com",
   },
-  description: "Tech-optimist, AI-enthusiast, Sports freak, foodie, and aspiring Entrepreneur",
+  description: "Christophe Thomassin's personal website",
   openGraph: {
     title: "christophethomassin.com",
     description:
-      "Tech-optimist, AI-enthusiast, Sports freak, Foodie, and aspiring Entrepreneur",
+       "Christophe Thomassin's personal website",
     url: "https://christophethomassin.com",
     siteName: "christophethomassin.com",
     images: [

@@ -8,8 +8,8 @@ type Props = {
     title: string;
     description: string;
     date?: string;
+    picture?: string;
   };
-
   views: number;
 };
 
@@ -30,7 +30,12 @@ export const Header: React.FC<Props> = ({ blog, views }) => {
   return (
     <header
       ref={ref}
-      className="relative isolate overflow-hidden bg-gradient-to-tl from-black via-zinc-900 to-black"
+      className="relative isolate overflow-hidden"
+      style={{
+        backgroundImage: `url(${blog.picture})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
     >
       <div
         className={`fixed inset-x-0 top-0 z-50 backdrop-blur lg:backdrop-blur-none duration-200 border-b lg:bg-transparent ${
@@ -88,20 +93,15 @@ export const Header: React.FC<Props> = ({ blog, views }) => {
         </div>
       </div>
       <div className="container mx-auto relative isolate overflow-hidden py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center flex flex-col items-center">
-          <div className="mx-auto max-w-2xl lg:mx-0">
-            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl font-display">
-              {blog.title}
-            </h1>
-            <p className="mt-6 text-lg leading-8 text-zinc-300">
-              {blog.description}
-            </p>
-          </div>
-
-          <div className="mx-auto mt-10 max-w-2xl lg:mx-0 lg:max-w-none">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 text-left flex flex-col items-start"> {/* Change text alignment to left */}
+          <div className="w-full flex justify-between items-start">
+            <div className="max-w-2xl lg:max-w-none">
+              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl font-display">
+                {blog.title}
+              </h1>
+            </div>
             {blog.date && (
               <div className="text-base font-semibold leading-7 text-white">
-                Published on:{" "}
                 <time dateTime={new Date(blog.date).toISOString()}>
                   {Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
                     new Date(blog.date)
@@ -109,6 +109,11 @@ export const Header: React.FC<Props> = ({ blog, views }) => {
                 </time>
               </div>
             )}
+          </div>
+          <div className="max-w-2xl lg:mx-0 mt-6">
+            <p className="text-lg leading-8 text-zinc-300">
+              {blog.description}
+            </p>
           </div>
         </div>
       </div>

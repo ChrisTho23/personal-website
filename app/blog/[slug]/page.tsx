@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import { allBlogs } from "contentlayer/generated";
 import { Mdx } from "@/app/components/mdx";
-import { Header } from "./header"; // Make sure you have a Header component for blogs
+import { Header } from "./header"; 
 import "./mdx.css";
-import { ReportView } from "./view"; // Ensure this component is relevant for blogs
+import { ReportView } from "./view"; 
 import { Redis } from "@upstash/redis";
 
 export const revalidate = 60;
@@ -33,7 +33,7 @@ export default async function PostPage({ params }: Props) {
   }
 
   const views =
-    (await redis.get<number>(["pageviews", "blogs", slug].join(":"))) ?? 0;
+    (await redis.get<number>(["pageviews", "blog", slug].join(":"))) ?? 0;
 
   return (
     <div className="bg-zinc-50 min-h-screen">
