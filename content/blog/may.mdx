@@ -1,0 +1,288 @@
+---
+title: "May"
+description: "This is a test blog post."
+date: "2024-05-15"
+published: true
+picture: "test-blog.jpg"
+---
+
+# TL;DR
+
+---
+
+# Of the month
+
+## Startup of the month: Artisan AI
+
+This month’s company of the month is [Artisan AI](https://artisan.co/). I discovered the company during this winter’s YC batch 
+(YC W24) already but after hearing [Jaspar Carmichael-Jack](https://www.linkedin.com/in/jaspar-carmichael-jack/) pitch and demo 
+Artisan at this year’s HubSpot GenAI Summit in San Francisco, I had to dig deeper into it. As someone spending lots of time 
+playing around with the newest LLM models and AI tools, which gives me some intuition what can and what cannot be done, I am 
+generally pessimistic about companies with shiny demos building agentic workflows. But I have to admit, the team behind Artisan 
+AI might be on to something. 
+
+### Agentic workflows
+
+As Andrew Ng underlined at [Sequoia‘s AI Ascent](https://www.youtube.com/watch?v=sal78ACtGTc), agents are the future of AI. But what are agents and agentic wokflows? 
+AI agents are defined as AI systems that can plan, make decisions, and take actions in a pre-defined environment. 
+An example for an AI agent would be an AI system able to build you a power point pitch deck for your startup based 
+on your description and some context files without you having to open PowerPoint, organize the content of the slide, 
+and so on. Under the hood the AI system is working itself along an agentic workflow. Today, an agentic-workflow 
+encompasses a pre-defined process (e.g., analyzing the context, researching the structure of a pitch deck, structuring 
+the context accordingly, thinking about the layout of the slides, creating the slides, evaluating the slides,…) the agent 
+is going through, at every step, evaluating the need for certain actions (e.g., open PowerPoint and add 12 empty slides) 
+and eventually calling other tools to perform these actions (e.g., recurse to the slide layout step for the team slide 
+because it is not easy to understand). Artisan AI has set itself the goal to lead the next Industrial Revolution of human 
+workers by building exactly such agents. At Artisan you can hire your AI agent like you would hire a human coworker. For 
+now, the company offers 3 different AI workers, Ava the Sales Representative, Liam the Marketer, and James the Customer 
+Success Representative. These personas are intended to complete tasks human’s do in the respective domains end-to-end. 
+Ava, for instance, is capable of taking over your sales outbound at scale. After setting up the worker with information 
+about your company, products, and goals, the sales rep takes over and makes outreaches to 1000s of prospective customers 
+on your behalf (do not worry you can also choose to validate each mail before it is sent) based on a database of contacts. 
+Not only does Ava send these emails using effective sales best practices but she can also follow up and schedule meetings 
+with your human sales team (AI bots are not allowed to conduct video calls yet).
+
+### Agents need an OS and Artisan can provide it
+
+What sets Artisan apart is that they are not only providing the agents as standalone solutions but also the operating system (OS) allowing to orchestrate these agents. When you think about it that makes a lot of sense. Even human workers have to be onboarded on how the job works, get to know the company’s products and services, get access to all the tools they need, get to know the company’s values, and understand their goals and goal metrics. For AI workers setting this “context” is even more important. Today’s AI systems are still not very good at reasoning so the more context you provide, the better an AI system can fulfill its tasks like you intended it to, hence maximizing the alignment of the worker with your company. Furthermore, the Artisan platform allows you to communicate with your worker, like you would with a human employee, to get insights into what he is doing and give him instructions. All that is complemented with analytics dashboards and third-party app integrations.
+
+## Fundraising of the month: The bot company and H
+
+Exceptionally, this version of the blog will contain two companies in this category, because I could not not mention any of these 
+two companies.
+
+As a French citizen, there was no way [H](https://www.hcompany.ai/) would not be mentioned in this category. H, a Paris-based 
+company previously known as Hollistic AI, just announced their massive $220m seed round with notable investors including 
+venture firm Accel, Creandum, and Visonaries Club; tech giants Amazon and Samsung; and investors Xavier Niel and Bernard 
+Arnault [1](https://techcrunch.com/2024/05/21/french-ai-startup-h-raises-220-million-seed-round/). Charles Kantor, 
+previously researcher at Stanford University, along with his four co-founders from Deepmind will be the CEO of this 
+venture with the goal to build [“frontier action models to boost the productivity of workers”](https://www.hcompany.ai/). 
+I am really excited about this new Paris-based AI giant striving for AGI.
+
+It seems like serial entrepreneur Kyle Vogt never misses. After successfully co-founding Twitch and self-driving company Cruise, 
+he has now announced his next venture on [Twitter](https://x.com/kvogt/status/1790126749608554964), the robotics startup 
+[“The Bot Company”](https://www.bot.co/). Investors seem confident in the company Vogt is co-founding with Paril Jain 
+(Ex-Head of Planning @Tesla) and Luke Holoubek (Ex-Cruise), providing the company with $150m of funding. The company’s vision? 
+[“We're building bots that do chores so you don't have to. Everyone is busy. Bots can help.”](https://x.com/kvogt/status/1790126749608554964)
+
+## Tool of the month: Unriddle
+
+In my function as a researcher, I am currently reading loads of papers day in and day out. A tool that I found very helpful 
+for reading, understanding, citing, and summarizing paper content is [Unriddle](https://www.unriddle.ai/). Unriddle allows 
+users to read research papers faster by supercharging their document editor with AI. Users simply select a paper of interest 
+(etiher download or URL) and the three
+
+## Paper of the month: Kolmogorov-Arnold Networks (KANs)
+## Person of the month: Sam Altman → ETL
+##  Quote of the month: “Stop trying to be liked by everybody, you don’t even like everybody”
+
+---
+
+# Deep dive: AI Interpretability - An overview
+
+The chances that no day has passed since the beginning of 2023 in which I have not heard the word “AI” are zero to none. 
+Sure, one could argue that I study Data Science and currently live in the valley, but no one can deny that the buzzword 
+is **omni**present in today’s world. To give you a sense of recent developments, today, [77% of devices in use leverage 
+some kind of AI](https://www.authorityhacker.com/ai-statistics/) and the AI market is expected to grow with a [CAGR of 42% 
+to $1.3 trillion in 2032](https://www.bloomberg.com/company/press/generative-ai-to-become-a-1-3-trillion-market-by-2032-research-finds/), 
+about half of the GDP of France in 2022. Publicly, AI is always coupled with security concerns and risks. While there is 
+good reason to believe that this technology is of unrepresented power, one might argue that a lot of the fear of AI systems 
+comes from the lack of expertise on how these systems actually work which makes it hard to their limitations. For instance, 
+one of the godfathers of AI, Yann LeCun, Chief AI Scientist at Meta, recently addressed AI security concerns with: 
+“[before “urgently figuring out how to control AI systems much smarter than us" we need to have the beginning of a hint of a 
+design for a system smarter than a house cat”](https://www.linkedin.com/in/yann-lecun/recent-activity/all/). What, at least 
+in my perception, is relatively little discussed is the fact that even the AI researchers at OpenAI, FAIR, DeepMind, and co. 
+do not really understand how certain AI models work themselves. This does not mean that these researchers do not understand 
+what they are doing (which they obviously do) but goes back to the conundrum of interpretability of today’s predominantly 
+used set of AI models, so-called Deep Learning models.
+
+But what does interpretability even mean in the context of the AI model? How does interpretability differ from explainability? 
+Unfortunately, academics have not agreed on a specific difference of neither the terms nor their difference yet. Generally speaking, 
+the field of explainable AI (XAI) deals with understanding AI models’ inner workings in order to explain model outputs based on 
+their input. The exact difference between interpretability and explainability leaves room for interpretation. Recently, scientist 
+have started to draw the line based on the scope if the task. In this school of thought, explainability describes the capability 
+to explain the reason for certain predictions to humans/users while interpretability deals with understanding the inner working 
+of the model [1](https://www.techtarget.com/whatis/definition/explainable-AI-XAI) [2](https://en.wikipedia.org/wiki/Explainable_artificial_intelligence#cite_note-ISO29119-36)
+[3](https://www.sciencedirect.com/science/article/pii/S1566253523001148). From my point of view, AI interpretability is necessary 
+to reach explainability which is why I will use this term predominantly. 
+
+This definition is all well and good but why is AI interpretability even important? Let me try to give you an example and outline 
+a few business implications of (the lack of) AI interpretability. Not too long ago, researchers at Stanford thought to have found 
+a CNN-based classification model able to detect signs of cancer based on skin images accurately 
+[4](https://www.sciencedirect.com/science/article/pii/S0022202X18322930?via%3Dihub=#bib3). Turns out that the model was trained on 
+a dataset in which a ruler, measuring the size of the malignants, was included in every picture of a cancer-causing malignant. 
+Thus, the model just “learned” to detect a ruler at the border of the picture instead of actually learning how to differentiate 
+between cancer-causing and non-cancer-causing malignants. If the researchers had not found this mistake and the model had been 
+deployed into production, there is a good chance that patients with cancer-causing malignants would have been diagnosed cancer-free, 
+wasting precious time to combat the cancer cells, potentially causing death. Sure, this example might not seem scary, yet underlines 
+the risk of not actually understanding how deep learning models reason. And with AI taking over the world, being implemented in more 
+and more applications, AI models might soon make lots of decisions with direct impact on human life. Does your car turn left or right 
+(Automobile)? Do you need more drugs to combat a certain disease (Healthcare)? Will you get a credit from your bank (Finance)? Will 
+you get the job (Professional services)? Next to risks, AI interpretability is also a major roadblock for a plenary of business 
+opportunities. A lot of industries such as Healthcare, Legal, and Automotive ask (regulatory) for human-in-the-loop applications 
+of AI models (humans are part of the decision-making process and validate/authorize outcomes) because of the high stakes of every 
+decision, limiting AI usage to worse performing interpretable AI models. Moreover, fully interpretable AI models would not open up 
+business opportunities but also allow researchers and developers to excel in their work. For example, Doctors could understand which 
+symptoms allow computer vision models to detect lung cancer, potentially leading to new findings, advancing the combat of lung cancer 
+or developers could debug their AI applications systematically by understanding where errors stem from.
+
+In the scientific world, AI interpretability has recently gotten a lot of attention. This is mainly due to the advent of the so-called 
+black box model. As implied before, not all AI models are not interpretable by default. In so-called white box models such as linear 
+regression (incl. regularization techniques), decision trees, and generative additive models the relationship between input and 
+output is often linear and monotonic (the relationship between feature and label is one-directional) and always allows the 
+decision-making process to be traced back from the prediction to the output 
+[5](https://towardsdatascience.com/machine-learning-interpretability-techniques-662c723454f3) 
+[6](https://www.tookitaki.com/glossary/white-box-machine-learning) 
+[7](https://www.researchgate.net/publication/336781462_Black-Box_vs_White-Box_Understanding_Their_Advantages_and_Weaknesses_From_a_Practical_Point_of_View). 
+In black-box models, first and foremost deep neural networks (DNNs), however, we have highly non-linear, non-monotonic relationships 
+between the input and output. In DNNs these non-linearities are introduced by non-linear activation functions on the nodes 
+(ReLU, GeLU, tanh,…). In combination with the large scale (billions of parameters) of today’s AI systems, driven by the ‘scaling laws’ 
+of the transformer architecture, the results of these black-box models are uninterpretable for researchers and experts. Since this 
+latter class of models, which includes all kinds of deep learning models (MLP, RNN, CNN, GAN, AE, GPT, ViT, diffusion models), 
+support-vector machines, and others, is primarily used in practical applications due to their significantly better performance 
+than white-box models, a lot of new methods have been introduced in the field of XAI lately, making it hard to cluster the field 
+in a mutually exclusive collectively exhaustive structure. The best taxonomy I have found comes from a group of researchers from 
+South Corea, Spain, and Egypt 
+[8](https://www.researchgate.net/publication/336781462_Black-Box_vs_White-Box_Understanding_Their_Advantages_and_Weaknesses_From_a_Practical_Point_of_View)
+[9](https://www.sciencedirect.com/science/article/pii/S1566253523001148). They define a structure around four axes to cluster XAI methods, 
+scope-based, model-based, complexity-based, and methodology-based. For this deep dive we will quickly dive into the four axes, 
+describing the characteristics of each axis and notable examples. As stated before, there is no MECE framework for interpretability 
+methods to date. Thus, I will cluster the most notable methods in a way that each cluster has at least one representative example.
+
+1. Scope-based: The scope of the interpretability is one of the most common differentiations. We divide methods into local and 
+global interpretability.
+    1. Global interpretability: Interpretability for the entire model. Global interpretability means one can explain how the entire 
+    model reasons, from input to output. One approach to better understanding model reasoning is to isolate features to examine how 
+    marginal changes in these features impact the final prediction. The two prevailing methods to do so are partial dependence plots 
+    (PDP) and accumulated local effects (ALE). PDPs map the values of one or two features to the output value by marginalizing the 
+    remaining feature space [10](https://christophm.github.io/interpretable-ml-book/pdp.html). ALEs describe the average impact of a 
+    feature on the final prediction by averaging over the change of prediction in a small window 
+    [11](https://christophm.github.io/interpretable-ml-book/ale.html). ALE are preferred in many applications as they are unbiased 
+    for correlated features, which occur often in real-world datasets. Another important global interpretability concept is feature 
+    importance. While there are many different heuristics to compute the feature importance, the basic idea is to attribute a 
+    relevance weight to each input value according to their “impact” on the final prediction. A popular feature importance method 
+    is permutation feature importance where single features are permutated and feature importance is deduced from the following 
+    change in the prediction error. 
+    2. Local interpretability: Interpretability for a specific data sample. According to our previous definition, we could also 
+    speak about local explainability in this case. Local interpretability means one can explain why for a specific input, 
+    the model outputs a specific output. One way to gain local interpretability is to locally train a white-box model, a so-called 
+    surrogate model, to explain an individual prediction. Most commonly, we use Local interpretable model-agnostic explanations 
+    (LIME) to do so [12](https://arxiv.org/pdf/1602.04938). We can then leverage the interpretability of the interpretable model 
+    trained to “learn” the behavior of our black box to get an idea of local decision boundaries, feature importance for specific 
+    predictions, and perturbations.
+2. Model-based: We divide methods in model-specific and model-agnostic methods.
+    1. Model-specific: On the one hand, there is a wide variety of AI architectures out there. Some of these architectures will 
+    allow dedicated interpretability methods to yield better interpretability. These methods are called model-specific methods. 
+    One of the most broadly used model-specific methods is attention scores/maps. Transformers, probably today’s most used AI 
+    architecture, work so well because they allow to weigh the importance of other input according to their relevance and to 
+    use this weighted input as context for the current prediction. This is done through the matrix multiplication of a query 
+    (”What is relevant for the current prediction?”) and a key (”What does this input have to offer?”) embedding, which results 
+    in an attention score used to weigh the inputs. These attention scores, by definition, shed some light on what inputs the 
+    model deems important in its prediction process, similar to other local feature importance interpretability methods. For 
+    computer vision models, these attention scores can be displayed as attention maps, highlighting which pixels in the image 
+    got the most attention for a specific prediction. While this method has only limited application in state-of-the-art 
+    architectures due to the use of MLP layer, it has been shown that transformer-only models are practically white box models 
+    as they can be written as a sum of interpretable end-to-end functions 
+    [13](https://transformer-circuits.pub/2021/framework/index.html#def-privileged-basis).
+    2. Model-agnostic: On the other hand, we need model-agnostic interpretability methods to compare the interpretability results 
+    of different models with each other. Furthermore, these methods give developers and researchers flexibility in the choice of 
+    their model. An example of a model-agnostic method that has recently gained a lot of popularity is SHAP values 
+    (SHapley Additive exPlanations). The idea behind SHAP values, originating from cooperative game theory, is to amount “credit” 
+    to the input features building a SHAP feature importance score. SHAP value expresses the contribution of the features to get 
+    to the current output f(x) from a base value E[f(z)] that would be predicted if we did not know any features 
+    [14](https://papers.nips.cc/paper_files/paper/2017/file/8a20a8621978632d76c43dfd28b67767-Paper.pdf). One of the main advantages 
+    of SHAP values is that they are additive, meaning that the contribution of each feature adds up to the total contribution of 
+    the features, yielding comparability between features. SHAP values can be used for all kinds of models. While the concept is 
+    designed for local interpretability, there are also modified versions used for global intepretability.
+3. Complexity-based: As mentioned before, from an interpretability point of view we can divide models into two clusters, 
+white box and black box model. For each of these clusters we use different interpretability methods. We divide methods into 
+intrinsic and post-hoc methods.
+    1. Intrinsic: Some might argue intrinsic interpretability is not even an interpretability method. For methods in this cluster, 
+    interpretability is already built into the model as, for example, it is the case for linear regression models. Next to 
+    white-box models, researchers have also tried to alter the structure of black box models to make them intrinsic. We already 
+    talked about the interpretable transformer-only architecture. Another attempt to make black box model intrinsically 
+    interpretable revolves around concept-based interpretability. Concepts, in this context are high-level, human-understandable 
+    units of information. The idea to define and evaluate models based on concepts stems from computer vision. For instance, in 
+    computer vision models trained to classify animals one could introduce the presence of fur, the hight of the animal, and the 
+    number of extremities of the animal as concepts. The two prevailing methods to make models interpretable using concepts are 
+    Concept Bottleneck Model (CBM) and Testing with Concept Activation Vectors (TCAV). The earlier method, CBMs, includes 
+    introducing an intermediate model, a context predictor, into the original model to learn if human-defined contexts are 
+    fulfilled for the input, and based on the fulfillment or lack of fulfillment of the concept layer, the model predicts 
+    its output [15](https://openreview.net/pdf?id=TIsrnWpjQ0). The latter method is rather global and model-specific but will 
+    be mentioned for completeness. TCAVs learn concept activation vectors from the node activation in a certain layer of the 
+    network based on a comparison of the activation in training samples with the defined concept versus training samples without 
+    this concept. This way we can model the decision boundaries of these concepts to get a better idea over the global reasoning 
+    of the model [16](https://arxiv.org/pdf/1711.11279). While earlier method rely on human-defined concepts in a supervised setting, 
+    there are first semi-supervised and unsupervised approaches to let the model “learn” significant concepts by itself.
+    2. Post-hoc: As we discussed before, black box models are not interpretable by definition. To make this kind of models more 
+    interpretable we often use post-hoc methods, which often imply training a second, so-called surrogate model, to explain 
+    predictions of the original black box model. Most of the methods that we have discussed previously such as 
+    SHAP, PDP, ALE, LIME, TCAV, and many more are actually post-hoc methods which is why I do not see the need to dive into 
+    another example at this point in time.
+4. Methodology-based: Last but not least, over time, researchers have found different approaches to solving the interpretability 
+problems of AI models. It is also possible to distinct methods according to their family of approach. Most of these approaches 
+fall into the cluster of model-specific interpretability methods for deep neural networks. This includes but is not limited to 
+[17](https://www.sciencedirect.com/science/article/pii/S1566253523001148):
+    1. Backpropagation-based methods: In supervised learning, deep neural networks learn to optimally map inputs to outputs by 
+    continuously updating their parameters according to a loss that captures the deviation between the prediction with the old 
+    weights with the true prediction. This update of the parameters, called backpropagation, is done gradually backward from 
+    the output to the input leveraging Leibniz’s chain rule to adjust each weight according to it’s “contribution” to the final 
+    prediction. Interpretability methods like “Layer-wise relevance propagation” try to use a similar approach to recursively 
+    reconstruct the contribution of each input node to the final output. To do so, the method assumes that each layer weighs the 
+    inputs coming from the previous layer with a certain relevance, which is equal for each layer. This relevance can be deduced 
+    from the weights on the edges between the layers using Deep Taylor Decomposition and projected from the output back onto the 
+    input using through backpropagation. [18](https://iphome.hhi.de/samek/pdf/MonXAI19.pdf)  
+    2. Perturbation-based methods: In perturbation-based methods, the sensitivity of the model to changes or masking 
+    (”perturbations”) of inputs and model parameters is inspected regarding the impact on the output by comparing old and new 
+    input value with each other. Methods include, for example, applying grey masks to parts of the input images in computer 
+    vision tasks or the change of words in the text input of a NLP model. This cluster also includes adversarial methods in 
+    which small perturbations that cause false predictions are explored to map decision boundaries 
+    [19](https://christophm.github.io/interpretable-ml-book/adversarial.html). A major downside of these methods is their 
+    compute intensity.
+
+Honorable mentions: There are a bunch of other interpretability methods that I did not discuss above. Feel free to check them out. 
+Saliency maps [21](https://arxiv.org/pdf/1312.6034), BagNets [22](https://arxiv.org/abs/1904.00760), 
+TED [23](https://arxiv.org/pdf/1811.04896), SENN [24](https://people.csail.mit.edu/davidam/docs/SENN.pdf), and 
+DkNN [25](https://arxiv.org/abs/1803.04765) to name some.
+
+Last but not least, we want to have a quick look at interpretability methods for the type of models that is probably 
+the most relevant in AI right now, namely models powered by generative pre-trained transformers (GPTs), as LLMs like 
+ChatGPT, Gemini, LLaMa, Claude, and others and vision transformer. Since Transformers are based on the attention mechanism 
+one might think they can be analyzed using attention maps as mentioned under 2.1. Unfortunately, GPTs are far from following 
+transformer-only architectures. With today’s scale, GPTs easily include up to 100 and more layers of multi-head attention 
+head. Furthermore, these attention heads and other parts of the GPT architecture rely on MLP layers which come with their 
+inherent black-box characteristic, making it hard to propagate attention scores from one end of the network to the other. 
+While attention mechanism and feature attribution (backpropagation- or perturbation-based) can shed some light into the 
+dark [26](https://arxiv.org/pdf/2402.01761), pioneering research institutions like OpenAI and Anthropic recently started 
+advocating for mechanistic interpretability [27](https://transformer-circuits.pub/2023/interpretability-dreams/index.html) 
+[28](https://distill.pub/2020/circuits/zoom-in/). Mechanistic interpretability is a bottom-up strategy that encompasses 
+making the smallest components of neural networks interpretable to be able to scale this interpretability to the largest 
+networks, similar to reverse engineering (think of software reverse engineering). Although there have not been any 
+major breakthroughs in the field yet, recent publications around circuit interpretability look promising. The idea of 
+deep neural networks having similar structures as biological organisms is trivial, after all parts of neural networks 
+stem from insights in neurology. But visualizations of the latent spaces of computer vision models have exposed a 
+glimpse into the rich inner world of DNNs. In the paper “Zoom In: An Introduction to Circuits” 
+[28](https://distill.pub/2020/circuits/zoom-in/), published by OpenAI researchers in 2020, researchers found that in 
+the InceptionV1 model, a rather simple CNN model for image classification, groups of nodes in certain layers seem to 
+“learn” to detect characteristics in the input pictures during the training process. For example, a group of neurons 
+in an early layer learned to detect curves in the input pictures while another group of neurons in a later layer learned 
+to detect dog snouts. Further examinations, e.g. for the first example, show that lighter curves lead to lighter activation 
+of the neurons and that the rotation of the curves leads to a shift of the activation inside the group of neurons which 
+showed to capture curves at all angles, ruled out the chance of a coincidence. Based on these findings, the concepts of 
+features -fundamental units of neural networks- and circuits -features connected by weights- were introduced. More complex 
+features, e.g, cars, can be thought of as aggregations of downstream features, e.g., tires and windows, through circuits. 
+Positive weights between features indicate that the latter feature (client) is exciting when the prior feature fires and 
+negative weights indicate the client is inhibited when the prior feature fires. Unfortunately, researchers have also found 
+the phenomenon of polysemantic neurons, neurons deliberately combining different features without any rationale, which still 
+cannot be explained [29](https://transformer-circuits.pub/2021/framework/index.html#def-privileged-basis). On another note, 
+researchers at OpenAI as a part of their goal to ‘Training AI systems to do alignment research’ 
+[30](https://openai.com/index/our-approach-to-alignment-research/) have introduced a new technique to accelerate the advancements 
+in AI interpretability. In a 3-step process, researchers prompted GPT4o to explain the behavior of model weights in the GPT2 model 
+and to score the explanation [31](https://openai.com/index/language-models-can-explain-neurons-in-language-models/). 
+The researchers admitted that the method was not performing very well, yet saw promising improvements with better models and 
+additional prompting. 
+
+To conclude, the lack of interpretability remains one of the biggest issues of deep neural networks. Not only does the black-box 
+characteristic of these models impede advancements in model performance but it also prevents the implementation of this powerful 
+family of models for many applications, including law, healthcare, and automotive. As researchers intensify research on the 
+interpretability of GPTs, the area of mechanistic interpretability looks promising, even though lacking generalizable results. 

@@ -36,7 +36,7 @@ export default function Home() {
       <div className="hidden w-screen h-px animate-glow md:block animate-fade-right bg-gradient-to-r from-zinc-300/0 via-zinc-300/50 to-zinc-300/0" />
       <div className="my-16 text-center animate-fade-in">
         <h2 className="text-sm text-zinc-400 ">
-          "Trust the next chapter, because the author is you."
+          Hi there, this is my website. Feel free to explore!
         </h2>
       </div>
     </div>

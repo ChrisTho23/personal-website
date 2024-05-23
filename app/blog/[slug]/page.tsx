@@ -40,7 +40,7 @@ export default async function PostPage({ params }: Props) {
       <Header blog={blog} views={views} /> {/* Ensure the Header component is adapted for blogs */}
       <ReportView slug={blog.slug} /> {/* Ensure this component is adapted for blogs if needed */}
 
-      <article className="px-4 py-12 mx-auto prose prose-zinc prose-quoteless">
+      <article className="px-4 py-12 mx-auto prose prose-zinc prose-quoteless max-w-3xl">
         <Mdx code={blog.body.code} />
       </article>
     </div>
