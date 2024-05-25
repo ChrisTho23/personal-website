@@ -21,13 +21,15 @@ playing around with the newest LLM models and AI tools, which gives me some intu
 generally pessimistic about companies with shiny demos building agentic workflows. But I have to admit, the team behind Artisan 
 AI might be on to something. 
 
+![Artisan's Ava (Sales Rep)](/artisan.jpg)
+
 ### Agentic workflows
 
-As Andrew Ng underlined at [Sequoia‘s AI Ascent](https://www.youtube.com/watch?v=sal78ACtGTc), agents are the future of AI. But what are agents and agentic wokflows? 
-AI agents are defined as AI systems that can plan, make decisions, and take actions in a pre-defined environment. 
-An example for an AI agent would be an AI system able to build you a power point pitch deck for your startup based 
-on your description and some context files without you having to open PowerPoint, organize the content of the slide, 
-and so on. Under the hood the AI system is working itself along an agentic workflow. Today, an agentic-workflow 
+As Andrew Ng underlined at [Sequoia‘s AI Ascent](https://www.youtube.com/watch?v=sal78ACtGTc), agents are the future of AI. 
+But what are agents and agentic wokflows? AI agents are defined as AI systems that can plan, make decisions, and take actions 
+in a pre-defined environment. An example for an AI agent would be an AI system able to build you a power point pitch deck for 
+your startup based on your description and some context files without you having to open PowerPoint, organize the content of 
+the slide, and so on. Under the hood the AI system is working itself along an agentic workflow. Today, an agentic-workflow 
 encompasses a pre-defined process (e.g., analyzing the context, researching the structure of a pitch deck, structuring 
 the context accordingly, thinking about the layout of the slides, creating the slides, evaluating the slides,…) the agent 
 is going through, at every step, evaluating the need for certain actions (e.g., open PowerPoint and add 12 empty slides) 
@@ -44,7 +46,14 @@ with your human sales team (AI bots are not allowed to conduct video calls yet).
 
 ### Agents need an OS and Artisan can provide it
 
-What sets Artisan apart is that they are not only providing the agents as standalone solutions but also the operating system (OS) allowing to orchestrate these agents. When you think about it that makes a lot of sense. Even human workers have to be onboarded on how the job works, get to know the company’s products and services, get access to all the tools they need, get to know the company’s values, and understand their goals and goal metrics. For AI workers setting this “context” is even more important. Today’s AI systems are still not very good at reasoning so the more context you provide, the better an AI system can fulfill its tasks like you intended it to, hence maximizing the alignment of the worker with your company. Furthermore, the Artisan platform allows you to communicate with your worker, like you would with a human employee, to get insights into what he is doing and give him instructions. All that is complemented with analytics dashboards and third-party app integrations.
+What sets Artisan apart is that they are not only providing the agents as standalone solutions but also the operating system (OS) 
+allowing to orchestrate these agents. When you think about it that makes a lot of sense. Even human workers have to be onboarded 
+on how the job works, get to know the company’s products and services, get access to all the tools they need, get to know the 
+company’s values, and understand their goals and goal metrics. For AI workers setting this “context” is even more important. 
+Today’s AI systems are still not very good at reasoning so the more context you provide, the better an AI system can fulfill 
+its tasks like you intended it to, hence maximizing the alignment of the worker with your company. Furthermore, the Artisan 
+platform allows you to communicate with your worker, like you would with a human employee, to get insights into what he is 
+doing and give him instructions. All that is complemented with analytics dashboards and third-party app integrations.
 
 ## Fundraising of the month: The bot company and H
 
@@ -59,27 +68,112 @@ previously researcher at Stanford University, along with his four co-founders fr
 venture with the goal to build [“frontier action models to boost the productivity of workers”](https://www.hcompany.ai/). 
 I am really excited about this new Paris-based AI giant striving for AGI.
 
+![H company website](/h.png)
+
 It seems like serial entrepreneur Kyle Vogt never misses. After successfully co-founding Twitch and self-driving company Cruise, 
 he has now announced his next venture on [Twitter](https://x.com/kvogt/status/1790126749608554964), the robotics startup 
 [“The Bot Company”](https://www.bot.co/). Investors seem confident in the company Vogt is co-founding with Paril Jain 
 (Ex-Head of Planning @Tesla) and Luke Holoubek (Ex-Cruise), providing the company with $150m of funding. The company’s vision? 
 [“We're building bots that do chores so you don't have to. Everyone is busy. Bots can help.”](https://x.com/kvogt/status/1790126749608554964)
 
-## Tool of the month: Unriddle
+![Tweet announcement Kyle Vogt](/kvogt.png)
 
-In my function as a researcher, I am currently reading loads of papers day in and day out. A tool that I found very helpful 
-for reading, understanding, citing, and summarizing paper content is [Unriddle](https://www.unriddle.ai/). Unriddle allows 
-users to read research papers faster by supercharging their document editor with AI. Users simply select a paper of interest 
-(etiher download or URL) and the three
+## Tool of the month: Langfuse
 
-## Paper of the month: Kolmogorov-Arnold Networks (KANs)
+I may be a little biased here, but this one is a no-brainer for me. [Langfuse](https://langfuse.com/), a YCombinator company out 
+of the winter 2023 batch, is an LLM engineerin platform helping developers to shed some light into their LLM applications. The core 
+feature of the open-source developer tool is tracing, which allows developers to log LLM (application) calls, step by step. For every 
+component inside their LLM application, including the LLM API call, relevant information such as input, output, and parameters are 
+logged. These logs, inspired by OpenTelemetry, are then visualized in the Langfuse app. 
+
+![Langfuse](/tracing-rag.jpg)
+
+On top of this foundation, the co-founders, Marc, Max, and Clemens, built a set of features to help developers build better LLM applications:
+
+- [Analytics](https://langfuse.com/docs/analytics/overview): Gain insights into your LLM application in production by tracking 
+metrics such as costs, latency, and token volume in real-time.
+- [Prompt management](https://langfuse.com/docs/prompts/get-started): Manage and version prompts and their config (for function calls) 
+in production
+- [Playground](https://langfuse.com/docs/playground)(Beta): Test and iterate on prompts to observe changes in model behaviour before
+putting them in production
+- [Evals](https://langfuse.com/docs/scores/overview)(Beta): Langfuse supports manual and model-based evaluation of LLM application calls. 
+The former method, allows users to manually score LLM generations. The latter, currently in beta, allows developer to automatically 
+evaluate the outputs of their LLM application in production leveraging another LLM.
+- [Datasets](https://langfuse.com/docs/datasets/overview): Collect traces of inputs and (expected) outputs of your LLM application in
+production in datasets to test changes in your application on these datasets. In combination with prompt management and evals this 
+feature is a gamechanger for LLM app developers
+
+The tool is free by default (up to 50k observations) and there are pro and team tiers for more sophisticated use-cases (>=100k 
+observations, dedicated support, and beta-acceess)
+
+This suit of features paired with their incredible UI and the easy-to-use python decorator integration make this my go-to tool for 
+every LLM application I build. I am looking forward to having all these featueres (especially datasets, prompt management, playground, 
+and evals) seemlessly integrate with each other and I am very curious what the future holds for Langfuse as the AI space expands.
+
+## Paper of the month: Kolmogorov-Arnold Networks (KAN)
+
+This is where we get a little bit more technical again. Researchers from MIT, CalTech, Northeastern, and NSF Institute for IA,
+released the paper [KAN: Kolmogorov-Arnold Networks](https://arxiv.org/abs/2404.19756) earlier this month. KANs, if proven to 
+scale well, are a promising alternative to multi-layer perceptrons (MLPs), the fundamental component of most deep neural networks. 
+
+ToDo: Add formula
+
+Today’s MLPs base on the universal approximation theorem which yields that every function y can be modelled by a function f(x) in
+a specific region where f(x) can be modelled by a MLP with, e.g., ReLU activations. This attribute is responsible for most of the 
+capabilities of modern DNNs. Yet, MLPs are also computationally expensive (approximating complex function can need lots of layers 
+and neurons) and intransparent due to non-linear activation functions 
+[2](https://en.wikipedia.org/wiki/Kolmogorov%E2%80%93Arnold_representation_theorem). For many years researchers have tried to build 
+an alternative model architecture leveraging Kolmogorov-Arnold representation theorem. This theorem basically postulates that every
+multivariate continuous function can be modelled by a finite composition of univarite functions and the sum operation 
+[3](https://kindxiaoming.github.io/pykan/intro.html) potentially waving the path for more powerful and interpretable architectures. 
+The problem to date was that the theorem models KANs as two-layer networks with 2n+1 (n is the input dimension) nodes in the hidden 
+layer. Reformulating the theorem to scale this architecture to ["wider and deeper"](https://arxiv.org/abs/2404.19756) networks is what 
+led to a significant performance boost, as this paper shows. But what does this network finally look like?
+
+![Comparison KAN vs. MLP](/kan.png)
+
+KANs maintain the fully-connected structure of MLP. But while MLPs place fixed activation functions on nodes, KANs, on the other side, 
+place learnable activation functions, 1D function parametrized by a spline (function defined piecewise by polynomials), on weights and 
+do not use any linear weights. The nodes in a KAN network simply add these 1D splines together, not adding any additional non-linearity.
+KANs can be viewed as a sweetspot of splines and MLPs, each harnessing their strengths to counterbalance their weaknesses. Splines 
+are precise for low-dimensional functions but struggle with the curse of dimensionality (COD). On the other hand, MLPs perform well in 
+high-dimensional contexts due to their feature learning capabilities (identification of patterns, structures, and characteristics 
+from raw data). However, MLPs are less precise than splines in low-dimensional scenarios because they are not optimized for univariate functions. 
+Thus, KANs excel in both aspects: they learn the external degrees of freedom (compositional structure) and also accurately approximate the internal 
+degrees of freedom (univariate functions) [<sup>3</sup>](https://arxiv.org/abs/2404.19756). 
+
+The paper shows that this results in better performance on a set of data fitting and partial differential equation exercises; and better 
+interpretability by auto-regressively decomposing the function trained by the KAN into simple to understand symbols. The researcher also 
+publish an API to construct, train, evaluate, and interpret KANs on your own. [Check it out](https://kindxiaoming.github.io/pykan/intro.html)
+
 ## Person of the month: Sam Altman → ETL
 ##  Quote of the month
+
 > Stop trying to be liked by everybody, you don’t even like everybody.
+
+I do not want to philosophical with this section but rather force myself to jot down the few quotes that reasonate with me when I 
+see them pass by. Not just because its always a flex when you have a deep quote to drop every now and then but because 
+I find quotes very charming. They break down quite deep and complex facets of human beings in just a few words. 
+
+This month's quote is arguably the reason you are (in case you made it this far) reading this. I would consider myself more on the 
+'overthinker' side of things, meaning I tend to think a lot before actually doing something. It's probably not the worst habit to 
+put some thoughts into what you are going to do next but I tend to over-do it. What's this and that person going to think about me 
+when I do that? How will it impact any stakeholders of that situation? Is there a scenario in which this could go wrong? 
+Is the effort worth the risk? What are the opportunity costs? Do I really want this? and many more are questions that might cross 
+my mind. Fact is, and that is where this quote hits the nail on the head, you cannot always be liked by everybody. You cannot always 
+make it right for everyone. To go even further, most people do not even care about what you do or spend even a second thinking about you.
+And do not get this wrong, this is not an objection but just normal. I do not spend my days thinking about everybody I meet and see. 
+Some time ago I read the excellent book 
+["The Sublte Art of Not Giving a F*ck"](https://www.amazon.com/Subtle-Art-Not-Giving-Counterintuitive-ebook/dp/B019MMUA8S) which dives 
+much deeper into this topic. Unfortunately, I have never internalized it's main message: "Stop caring so much about what others might 
+think but start thinking about what makes you happy". 
+
+This quote brought back exactly this though and I will try to take it more literal this time. Who knows maybe it also helps someone 
+out there :)
 
 ---
 
-# Deep dive: AI Interpretability - An overview
+# Deep dive: AI Interpretability
 
 The chances that no day has passed since the beginning of 2023 in which I have not heard the word “AI” are zero to none. 
 Sure, one could argue that I study Data Science and currently live in the valley, but no one can deny that the buzzword 
