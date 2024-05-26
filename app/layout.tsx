@@ -1,4 +1,5 @@
 import "../global.css";
+import 'katex/dist/katex.min.css';
 import { Inter } from "next/font/google";
 import LocalFont from "next/font/local";
 import { Metadata } from "next";
