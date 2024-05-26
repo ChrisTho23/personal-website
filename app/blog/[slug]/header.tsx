@@ -96,7 +96,7 @@ export const Header: React.FC<Props> = ({ blog, views }) => {
         <div className="mx-auto max-w-7xl px-6 lg:px-8 text-left flex flex-col items-start"> {/* Change text alignment to left */}
           <div className="w-full flex justify-between items-start">
             <div className="max-w-2xl lg:max-w-none">
-              <h1 className="text-4xl font-bold tracking-tight text-black sm:text-6xl font-display">
+              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl font-display">
                 {blog.title}
               </h1>
             </div>
@@ -111,7 +111,7 @@ export const Header: React.FC<Props> = ({ blog, views }) => {
             )}
           </div>
           <div className="max-w-2xl lg:mx-0 mt-6">
-            <p className="text-lg leading-8 text-black">
+            <p className="text-lg leading-8 text-white">
               {blog.description}
             </p>
           </div>
