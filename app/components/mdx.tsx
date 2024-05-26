@@ -3,10 +3,26 @@ import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMDXComponent } from "next-contentlayer/hooks";
+import { Reference, References } from 'app/components/reference';
 
 function clsx(...args: any) {
 	return args.filter(Boolean).join(" ");
 }
+
+const ImageWithSubtitle = ({ src, alt, title, className, ...props }) => (
+    <div className="image-container">
+        <img
+            src={src}
+            alt={alt}
+            className={clsx("rounded-md border border-zinc-200", className)}
+            {...props}
+        />
+        {title && (
+            <p className="text-center italic mt-0.5">{title}</p>
+        )}
+    </div>
+);
+
 const components = {
 	h1: ({ className, ...props }) => (
 		<h1
@@ -95,18 +111,13 @@ const components = {
 			{...props}
 		/>
 	),
-	img: ({
-		className,
-		alt,
-		...props
-	}: React.ImgHTMLAttributes<HTMLImageElement>) => (
-		// eslint-disable-next-line @next/next/no-img-element
-		<img
-			className={clsx("rounded-md border border-zinc-200", className)}
-			alt={alt}
-			{...props}
-		/>
-	),
+    img: ({
+        className,
+        alt,
+        ...props
+    }: React.ImgHTMLAttributes<HTMLImageElement>) => (
+        <ImageWithSubtitle className={className} alt={alt} {...props} />
+    ),
 	hr: ({ ...props }) => (
 		<hr className="my-4 border-zinc-200 md:my-8" {...props} />
 	),
@@ -161,6 +172,8 @@ const components = {
 		/>
 	),
 	Image,
+	Reference,
+	References,
 };
 
 interface MdxProps {
