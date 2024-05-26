@@ -1,8 +1,11 @@
 import { defineDocumentType, makeSource } from "contentlayer/source-files";
 import remarkGfm from "remark-gfm";
+import remarkToc from 'remark-toc';
+import remarkMath from 'remark-math';
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeKatex from 'rehype-katex';
 
 /** @type {import('contentlayer/source-files').ComputedFields} */
 const computedFields = {
@@ -13,6 +16,21 @@ const computedFields = {
   slug: {
     type: "string",
     resolve: (doc) => doc._raw.flattenedPath.split("/").slice(1).join("/"),
+  },
+  toc: {
+    type: "json",
+    resolve: (doc) => {
+      const headings = [];
+      const regex = /^(#{1,3})\s+(.*)$/gm;
+      let match;
+
+      while ((match = regex.exec(doc.body.raw)) !== null) {
+        const [, level, title] = match;
+        headings.push({ level: level.length, title });
+      }
+
+      return headings;
+    },
   },
 };
 
@@ -93,7 +111,7 @@ export default makeSource({
   contentDirPath: "./content",
   documentTypes: [Page, Project, Blog],
   mdx: {
-    remarkPlugins: [remarkGfm],
+    remarkPlugins: [remarkGfm, remarkToc, remarkMath],
     rehypePlugins: [
       rehypeSlug,
       [
@@ -124,6 +142,7 @@ export default makeSource({
           },
         },
       ],
+      rehypeKatex,
     ],
   },
 });
