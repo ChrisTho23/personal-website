@@ -3,10 +3,28 @@ import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMDXComponent } from "next-contentlayer/hooks";
+import { Reference, References } from 'app/components/reference';
 
 function clsx(...args: any) {
 	return args.filter(Boolean).join(" ");
 }
+
+const ImageWithSubtitle = ({ src, alt, title, className, ...props }) => (
+    <div className="image-container flex flex-col items-center">
+        <img
+            src={src}
+            alt={alt}
+            className={clsx("rounded-md border border-zinc-200", className)}
+            {...props}
+        />
+        {title && (
+            <p className="text-center italic -mt-5">
+                {title}
+            </p>
+        )}
+    </div>
+);
+
 const components = {
 	h1: ({ className, ...props }) => (
 		<h1
@@ -20,7 +38,7 @@ const components = {
 	h2: ({ className, ...props }) => (
 		<h2
 			className={clsx(
-				"mt-10 scroll-m-20 border-b border-b-zinc-800 pb-1 text-3xl font-semibold tracking-tight first:mt-0",
+				"mt-8 scroll-m-20 border-b border-b-zinc-800 pb-1 text-3xl font-semibold tracking-tight first:mt-0",
 				className,
 			)}
 			{...props}
@@ -29,7 +47,7 @@ const components = {
 	h3: ({ className, ...props }) => (
 		<h3
 			className={clsx(
-				"mt-8 scroll-m-20 text-2xl font-semibold tracking-tight",
+				"mt-6 scroll-m-20 text-2xl font-semibold tracking-tight",
 				className,
 			)}
 			{...props}
@@ -38,7 +56,7 @@ const components = {
 	h4: ({ className, ...props }) => (
 		<h4
 			className={clsx(
-				"mt-8 scroll-m-20 text-xl font-semibold tracking-tight",
+				"mt-6 scroll-m-20 text-xl font-semibold tracking-tight",
 				className,
 			)}
 			{...props}
@@ -47,7 +65,7 @@ const components = {
 	h5: ({ className, ...props }) => (
 		<h5
 			className={clsx(
-				"mt-8 scroll-m-20 text-lg font-semibold tracking-tight",
+				"mt-6 scroll-m-20 text-lg font-semibold tracking-tight",
 				className,
 			)}
 			{...props}
@@ -56,7 +74,7 @@ const components = {
 	h6: ({ className, ...props }) => (
 		<h6
 			className={clsx(
-				"mt-8 scroll-m-20 text-base font-semibold tracking-tight",
+				"mt-6 scroll-m-20 text-base font-semibold tracking-tight",
 				className,
 			)}
 			{...props}
@@ -95,18 +113,13 @@ const components = {
 			{...props}
 		/>
 	),
-	img: ({
-		className,
-		alt,
-		...props
-	}: React.ImgHTMLAttributes<HTMLImageElement>) => (
-		// eslint-disable-next-line @next/next/no-img-element
-		<img
-			className={clsx("rounded-md border border-zinc-200", className)}
-			alt={alt}
-			{...props}
-		/>
-	),
+    img: ({
+        className,
+        alt,
+        ...props
+    }: React.ImgHTMLAttributes<HTMLImageElement>) => (
+        <ImageWithSubtitle className={className} alt={alt} {...props} />
+    ),
 	hr: ({ ...props }) => (
 		<hr className="my-4 border-zinc-200 md:my-8" {...props} />
 	),
@@ -161,6 +174,9 @@ const components = {
 		/>
 	),
 	Image,
+	Reference,
+	References,
+	ImageWithSubtitle,
 };
 
 interface MdxProps {
