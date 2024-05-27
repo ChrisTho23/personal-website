@@ -10,7 +10,7 @@ function clsx(...args: any) {
 }
 
 const ImageWithSubtitle = ({ src, alt, title, className, ...props }) => (
-    <div className="image-container">
+    <div className="image-container flex flex-col items-center">
         <img
             src={src}
             alt={alt}
@@ -18,7 +18,7 @@ const ImageWithSubtitle = ({ src, alt, title, className, ...props }) => (
             {...props}
         />
         {title && (
-            <p className="text-center italic mt-0.5">
+            <p className="text-center italic -mt-5">
                 {title}
             </p>
         )}
@@ -38,7 +38,7 @@ const components = {
 	h2: ({ className, ...props }) => (
 		<h2
 			className={clsx(
-				"mt-10 scroll-m-20 border-b border-b-zinc-800 pb-1 text-3xl font-semibold tracking-tight first:mt-0",
+				"mt-8 scroll-m-20 border-b border-b-zinc-800 pb-1 text-3xl font-semibold tracking-tight first:mt-0",
 				className,
 			)}
 			{...props}
@@ -47,7 +47,7 @@ const components = {
 	h3: ({ className, ...props }) => (
 		<h3
 			className={clsx(
-				"mt-8 scroll-m-20 text-2xl font-semibold tracking-tight",
+				"mt-6 scroll-m-20 text-2xl font-semibold tracking-tight",
 				className,
 			)}
 			{...props}
@@ -56,7 +56,7 @@ const components = {
 	h4: ({ className, ...props }) => (
 		<h4
 			className={clsx(
-				"mt-8 scroll-m-20 text-xl font-semibold tracking-tight",
+				"mt-6 scroll-m-20 text-xl font-semibold tracking-tight",
 				className,
 			)}
 			{...props}
@@ -65,7 +65,7 @@ const components = {
 	h5: ({ className, ...props }) => (
 		<h5
 			className={clsx(
-				"mt-8 scroll-m-20 text-lg font-semibold tracking-tight",
+				"mt-6 scroll-m-20 text-lg font-semibold tracking-tight",
 				className,
 			)}
 			{...props}
@@ -74,7 +74,7 @@ const components = {
 	h6: ({ className, ...props }) => (
 		<h6
 			className={clsx(
-				"mt-8 scroll-m-20 text-base font-semibold tracking-tight",
+				"mt-6 scroll-m-20 text-base font-semibold tracking-tight",
 				className,
 			)}
 			{...props}
