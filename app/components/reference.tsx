@@ -1,4 +1,3 @@
-// app/components/Reference.tsx
 import React from 'react';
 
 interface ReferenceProps {
@@ -7,9 +6,7 @@ interface ReferenceProps {
 }
 
 export const Reference = ({ id, children }: ReferenceProps) => (
-  <sup id={`ref-${id}`}>
-    <a href={`#cite-${id}`}>{children}</a>
-  </sup>
+  <a href={`#cite-${id}`}>{children}</a>
 );
 
 interface ReferencesProps {

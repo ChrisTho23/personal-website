@@ -34,13 +34,13 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({ toc }) => {
 
   return (
     <div className="toc-container mx-auto my-8 p-4 rounded-lg shadow-lg bg-gradient-to-tl from-zinc-300/10 via-zinc-300 to-zinc-300/10 max-w-3xl">
-      <h2 className="text-2xl font-bold mb-4">Table of Contents</h2>
+      <h2 className="text-4xl font-bold mb-4">Table of Contents</h2>
       <ul>
         {toc.map((item, index) => {
           const chapterNumber = getChapterNumber(item.level);
           const itemStyle = item.level === 1
-            ? "mt-2 scroll-m-20 text-lg font-normal text-black"
-            : "mt-2 scroll-m-20 text-base font-normal text-black ml-4";
+            ? "mt-2 scroll-m-20 text-medium font-normal text-black"
+            : "mt-2 scroll-m-20 text-medium font-normal text-black ml-0.5";
           
           const slug = generateSlug(item.title);
 
