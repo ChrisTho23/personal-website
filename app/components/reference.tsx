@@ -15,7 +15,6 @@ interface ReferencesProps {
 
 export const References = ({ children }: ReferencesProps) => (
   <section>
-    <h2>References</h2>
     <ol>{children}</ol>
   </section>
 );
