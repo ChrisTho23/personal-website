@@ -27,7 +27,7 @@ const Alert: React.FC = () => {
   return (
     <div className="fixed top-8 left-8 bg-gradient-to-tl from-zinc-200/55 via-zinc-200 to-zinc-200/55 text-black p-4 rounded-lg shadow-lg flex items-center justify-between space-x-4 animate-fade-in">
       <Link href="/blog/may">
-        <span className="text-sm cursor-pointer">🎉 We have launched a new blog post! Check it out!</span>
+        <span className="text-sm cursor-pointer">🎉 I have launched my first blog post! Check it out!</span>
       </Link>
       <button
         onClick={() => setVisible(false)}
