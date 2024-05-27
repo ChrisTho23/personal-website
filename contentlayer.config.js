@@ -4,8 +4,8 @@ import remarkToc from 'remark-toc';
 import remarkMath from 'remark-math';
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
-import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeKatex from 'rehype-katex';
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
 
 /** @type {import('contentlayer/source-files').ComputedFields} */
 const computedFields = {
@@ -113,6 +113,7 @@ export default makeSource({
   mdx: {
     remarkPlugins: [remarkGfm, remarkToc, remarkMath],
     rehypePlugins: [
+      rehypeKatex,
       rehypeSlug,
       [
         rehypePrettyCode,
@@ -142,7 +143,6 @@ export default makeSource({
           },
         },
       ],
-      rehypeKatex,
     ],
   },
 });

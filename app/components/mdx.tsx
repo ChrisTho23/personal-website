@@ -18,7 +18,9 @@ const ImageWithSubtitle = ({ src, alt, title, className, ...props }) => (
             {...props}
         />
         {title && (
-            <p className="text-center italic mt-0.5">{title}</p>
+            <p className="text-center italic mt-0.5">
+                {title}
+            </p>
         )}
     </div>
 );
@@ -174,6 +176,7 @@ const components = {
 	Image,
 	Reference,
 	References,
+	ImageWithSubtitle,
 };
 
 interface MdxProps {
