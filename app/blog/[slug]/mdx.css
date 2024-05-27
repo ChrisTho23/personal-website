@@ -30,3 +30,9 @@
   [data-rehype-pretty-code-title] + pre {
     @apply mt-0;
   }
+
+  .centered-formula {
+    text-align: center;
+    margin: 20px 0;
+  }
+  
