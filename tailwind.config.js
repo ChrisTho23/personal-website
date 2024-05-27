@@ -19,7 +19,7 @@ module.exports = {
 						"code::after": {
 							content: '""',
 						},
-						textAlign: 'justify',
+						textAlign: 'left',
 					},
 				},
 				quoteless: {
