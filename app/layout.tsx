@@ -5,6 +5,7 @@ import LocalFont from "next/font/local";
 import { Metadata } from "next";
 import { Analytics } from "./components/analytics";
 import ChatBot from './components/chatbot';
+import Alert from './components/alert'; 
 
 export const metadata: Metadata = {
   title: {
@@ -14,8 +15,7 @@ export const metadata: Metadata = {
   description: "Christophe Thomassin's personal website",
   openGraph: {
     title: "christophethomassin.com",
-    description:
-       "Christophe Thomassin's personal website",
+    description: "Christophe Thomassin's personal website",
     url: "https://christophethomassin.com",
     siteName: "christophethomassin.com",
     images: [
@@ -47,6 +47,7 @@ export const metadata: Metadata = {
     shortcut: "/ct.jpg",
   },
 };
+
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
@@ -68,9 +69,9 @@ export default function RootLayout({
         <Analytics />
       </head>
       <body
-        className={`bg-black ${process.env.NODE_ENV === "development" ? "debug-screens" : undefined
-          }`}
+        className={`bg-black ${process.env.NODE_ENV === "development" ? "debug-screens" : undefined}`}
       >
+        <Alert /> {/* Add the Alert component here */}
         {children}
         <ChatBot />
       </body>
