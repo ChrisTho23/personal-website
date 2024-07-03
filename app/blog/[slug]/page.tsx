@@ -1,3 +1,4 @@
+import { Metadata } from 'next';
 import { notFound } from "next/navigation";
 import { allBlogs } from "contentlayer/generated";
 import { Mdx } from "@/app/components/mdx";
@@ -5,8 +6,7 @@ import { Header } from "./header";
 import "./mdx.css";
 import { ReportView } from "./view"; 
 import { Redis } from "@upstash/redis";
-import { TableOfContents } from "@/app/components/toc"; // Import the TOC component
-import Head from "next/head";
+import { TableOfContents } from "@/app/components/toc";
 
 export const revalidate = 60;
 
@@ -26,6 +26,33 @@ export async function generateStaticParams(): Promise<Props["params"][]> {
     }));
 }
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const slug = params?.slug;
+  const blog = allBlogs.find((blog) => blog.slug === slug);
+
+  if (!blog) {
+    return {};
+  }
+
+  return {
+    title: blog.title,
+    description: blog.description,
+    openGraph: {
+      title: blog.title,
+      description: blog.description,
+      images: [{ url: blog.picture }],
+      url: `https://christophethomassin.com/blog/${blog.slug}`,
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: blog.title,
+      description: blog.description,
+      images: [blog.picture],
+    },
+  };
+}
+
 export default async function PostPage({ params }: Props) {
   const slug = params?.slug;
   const blog = allBlogs.find((blog) => blog.slug === slug);
@@ -38,30 +65,15 @@ export default async function PostPage({ params }: Props) {
     (await redis.get<number>(["pageviews", "blog", slug].join(":"))) ?? 0;
 
   return (
-    <>
-      <Head>
-        <title>{blog.title}</title>
-        <meta name="description" content={blog.description} />
-        <meta property="og:title" content={blog.title} />
-        <meta property="og:description" content={blog.description} />
-        <meta property="og:image" content={blog.picture} />
-        <meta property="og:url" content={`https://christophethomassin.com/blog/${blog.slug}`} />
-        <meta property="og:type" content="article" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={blog.title} />
-        <meta name="twitter:description" content={blog.description} />
-        <meta name="twitter:image" content={blog.picture} />
-      </Head>
-      <div className="bg-zinc-50 min-h-screen">
-        <Header blog={blog} views={views} /> 
-        <ReportView slug={blog.slug} /> 
-        
-        <TableOfContents toc={blog.toc} />
+    <div className="bg-zinc-50 min-h-screen">
+      <Header blog={blog} views={views} /> 
+      <ReportView slug={blog.slug} /> 
+      
+      <TableOfContents toc={blog.toc} />
 
-        <article className="px-4 py-4 -mt-10 mx-auto prose prose-zinc prose-quoteless max-w-3xl">
-          <Mdx code={blog.body.code} />
-        </article>
-      </div>
-    </>
+      <article className="px-4 py-4 -mt-10 mx-auto prose prose-zinc prose-quoteless max-w-3xl">
+        <Mdx code={blog.body.code} />
+      </article>
+    </div>
   );
 }
