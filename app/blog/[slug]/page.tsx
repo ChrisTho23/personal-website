@@ -45,8 +45,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [
         {
           url: imageUrl,
-          width: 2560,  
-          height: 1280, 
+          width: 1200,  
+          height: 627, 
           alt: blog.title,
         }
       ],
@@ -60,8 +60,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [
         {
           url: imageUrl,
-          width: 2560,  
-          height: 1280, 
+          width: 1200,  
+          height: 627,
           alt: blog.title,
         }
       ],
