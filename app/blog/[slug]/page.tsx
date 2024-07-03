@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {};
   }
 
-  const imageUrl = blog.picture || '/default-image.jpg'; // Provide a default image
+  const imageUrl = blog.picture || '/ct.jpg';
 
   return {
     title: blog.title,
