@@ -34,13 +34,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {};
   }
 
+  const imageUrl = blog.picture || '/default-image.jpg'; // Provide a default image
+
   return {
     title: blog.title,
     description: blog.description,
     openGraph: {
       title: blog.title,
       description: blog.description,
-      images: [{ url: blog.picture }],
+      images: [{ url: imageUrl }],
       url: `https://christophethomassin.com/blog/${blog.slug}`,
       type: 'article',
     },
@@ -48,7 +50,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: 'summary_large_image',
       title: blog.title,
       description: blog.description,
-      images: [blog.picture],
+      images: [imageUrl],
     },
   };
 }
