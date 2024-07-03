@@ -34,7 +34,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {};
   }
 
-  const imageUrl = blog.picture || '/ct.jpg';
+  const baseUrl = 'https://christophethomassin.com';
+  const imageUrl = blog.picture ? `${baseUrl}${blog.picture}` : `${baseUrl}/ct.jpg`;
 
   return {
     title: blog.title,
