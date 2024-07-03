@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: blog.title,
     description: blog.description,
     openGraph: {
-      title: blog.title,
+      title: `Blog: ${blog.title}`,
       description: blog.description,
       images: [{ url: imageUrl }],
       url: `https://christophethomassin.com/blog/${blog.slug}`,
@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: blog.title,
+      title: `Blog: ${blog.title}`,
       description: blog.description,
       images: [imageUrl],
     },
