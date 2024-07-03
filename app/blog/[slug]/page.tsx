@@ -44,8 +44,8 @@ export default async function PostPage({ params }: Props) {
         <meta name="description" content={blog.description} />
         <meta property="og:title" content={blog.title} />
         <meta property="og:description" content={blog.description} />
-        <meta property="og:image" content={blog.picture} /> 
-        <meta property="og:url" content={`https://yourwebsite.com/blog/${blog.slug}`} />
+        <meta property="og:image" content={blog.picture} />
+        <meta property="og:url" content={`https://christophethomassin.com/blog/${blog.slug}`} />
         <meta property="og:type" content="article" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={blog.title} />
