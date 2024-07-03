@@ -6,6 +6,7 @@ import { Metadata } from "next";
 import { Analytics } from "./components/analytics";
 import ChatBot from './components/chatbot';
 import Alert from './components/alert'; 
+import Head from "next/head";
 
 export const metadata: Metadata = {
   title: {

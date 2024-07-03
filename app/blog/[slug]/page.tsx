@@ -44,13 +44,13 @@ export default async function PostPage({ params }: Props) {
         <meta name="description" content={blog.description} />
         <meta property="og:title" content={blog.title} />
         <meta property="og:description" content={blog.description} />
-        <meta property="og:image" content={blog.picture} /> {/* Replace with the correct image URL */}
-        <meta property="og:url" content={`https://yourwebsite.com/blog/${blog.slug}`} />
+        <meta property="og:image" content={blog.picture} />
+        <meta property="og:url" content={`https://christophethomassin.com/blog/${blog.slug}`} />
         <meta property="og:type" content="article" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={blog.title} />
         <meta name="twitter:description" content={blog.description} />
-        <meta name="twitter:image" content={blog.picture} /> {/* Replace with the correct image URL */}
+        <meta name="twitter:image" content={blog.picture} />
       </Head>
       <div className="bg-zinc-50 min-h-screen">
         <Header blog={blog} views={views} /> 
