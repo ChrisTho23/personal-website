@@ -41,14 +41,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: blog.title,
     description: blog.description,
     openGraph: {
-      title: `Blog: ${blog.title}`,
+      title: `Blog: ${blog.title} - ${blog.description}`,
       description: blog.description,
       images: [
         {
           url: imageUrl,
-          width: 1200,  
-          height: 627, 
-          alt: blog.title,
+          width: 2560,
+          height: 1280, 
         }
       ],
       url: `https://christophethomassin.com/blog/${blog.slug}`,
@@ -56,14 +55,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `Blog: ${blog.title}`,
+      title: `Blog: ${blog.title} - ${blog.description}`,
       description: blog.description,
       images: [
         {
           url: imageUrl,
-          width: 1200,  
-          height: 627,
-          alt: blog.title,
+          width: 2560,
+          height: 1280,
         }
       ],
     },
