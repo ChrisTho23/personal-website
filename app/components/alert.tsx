@@ -11,7 +11,7 @@ const Alert: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setVisible(true);
-    }, 0); 
+    }, 0);
 
     return () => clearTimeout(timer);
   }, []);
@@ -26,8 +26,8 @@ const Alert: React.FC = () => {
 
   return (
     <div className="fixed top-8 left-8 bg-gradient-to-tl from-zinc-200/55 via-zinc-200 to-zinc-200/55 text-black p-4 rounded-lg shadow-lg flex items-center justify-between space-x-4 animate-fade-in">
-      <Link href="/blog/june">
-        <span className="text-sm cursor-pointer">🎉 My blog for June is here! Check it out!</span>
+      <Link href="/blog/december">
+        <span className="text-sm cursor-pointer">🎉 My blog for December is here! Check it out!</span>
       </Link>
       <button
         onClick={() => setVisible(false)}
