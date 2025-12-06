@@ -1,0 +1,318 @@
+---
+title: "Some thoughts on reasoning"
+description: "The reasoning paradigm conquers the world of AI and nobody knows why..."
+date: "2025-02-28"
+published: true
+picture: "/february/states.png"
+---
+
+The following are the results of a 10-hour (actually timed) deep-dive into reasoning models as part of my application to Neel Nanda's 2025 Summer stream of the <Reference id="1">MATS</Reference> program. The goal of this project was to investigate the reasoning behaviour of such models to motivate further (mechanistic) interpretability work. If you are interested in AI secuirty and alignment, I wholeheartedly recommend you to apply to the MATS program of your choice. <p />
+All the code written for this project can be found <Reference id="2">here</Reference>. All results can be found in the <Reference id="3">src/results</Reference> directory.  
+
+---
+
+# A short intro to reasoning models
+
+For readers that might not had the opportunity to read into reasoning models, I decided to prepend a small introduction into reasoning models. Feel free to skip this section. <p />
+In September 2024, OpenAI released their o1 preview model, the first publicly available reasoning model in the world, crushing benchmarks in coding and math by orders of magnitude. Ever since, the reasoning model paradigm has become state of the art in math and coding with all other private labs releasing their own reasoning model (Grok 3, Claude 3.7, Gemini 2.0 Flash Thinking, Deepseek R1,...). But what's behind this technology? <p />
+The research community is still trying to figure out what the best way is to train reasoning models. This is mainly because closed-source private labs are not sharing their training recipes to the public. Deepseek's R1 is the first open-source model that performs on-par with closed-source reasoning model. In their technical report Deepseek explain to have trained their model with "pure" reinforcement learning (<Reference id="4">group relative policy optimization</Reference> to be precise) but publications by OpenAI <Reference id="11">[3]</Reference> and Deepmind <Reference id="12">[4]</Reference> suggest that their might be another approach to train reasoning models related to process reward models (PRM) and tree search. <p />
+But that should not be relevent for us now. Important is, the idea behind reasoning models which, in fact, is quite simple. Reasoning is just the product of training models leveraging two existing techniques used to orchestrate LLMs, chain-of-thought (CoT) and self-consistency, via reinforcement learning. Shortly after the release of GPT3, researchers found that so-called CoT-prompting, basically asking the model to think "step-by-step" would give strong performance gains on math, logic, and symbolic reasoning tasks <Reference id="5">[1]</Reference>. More recent work on CoT unveils self-consistency <Reference id="6">[2]</Reference>, a technique to sample multiple times at test-time and to select the next token/sequence of tokens using majority voting. In practice this means, we do not only use only compute to train the model but also at test-time to induce advanced reasoning capabilities into the model as described in the picture below. 
+
+<ImageWithSubtitle
+    src="/february/reasoning_inference.png"
+    alt="Attribution of compute across lifecycle"
+    title={<span>Attribution of compute across lifecycle</span>}
+/>
+
+
+Intuitively, this makes a lot of sense. For us humans this kind of thinking is called "System 2 Thinking". When asked "What is the capital of France?" we either know the answer (Paris) or we do not know the answer, no reason to think about it for a long time. But when I ask you to prove that the sum of the numbers from 1 to $n$ is $\frac{n*(n+1)}{2}$, you might want to take a second to think about the problem. That is called system 2 thinking. It is obvious that using test-time compute to mimic system 2 thinking will use more time than a simple inference call in traditional LLMs. That is why these reasoning models often take 1-3 minutes, depending of the difficulty of the task, to answer questions. <p />
+For now, researchers advocate to only use reasoning for tasks in which system 2 thinking is necessary like coding and math. These are also the domains in which this new family of model excels. Now if that is because we have a clear reward signal in those cases or because of the effectiveness of system 2 thinking for exactly those use cases is open for interpretation. 
+
+# Overview
+
+Reasoning-capable language models, such as OpenAI's o1 and o3-mini, represent a shift in language model design by incorporating structured, step-by-step reasoning rather than relying purely on pattern recognition. Unlike traditional next-token prediction models, reasoning-capable models have received little attention from a mechanistic interpretability perspective. <p />
+This study investigates the reasoning capabilities of  <Reference id="7">DeepSeek R1 Distill Qwen 1.5B</Reference>, a small, distilled reasoning model, using the <Reference id="8">GSM8K dataset</Reference>, which consists of grade-school math problems. The goal was to understand the model's reasoning behavior by testing its robustness and the impact of different intervention techniques on its problem-solving performance. I finally lay out future research problems that leverage existing mechanistic interpretability techniques to further investigate reasoning models. <p />
+Throughout the experiments, I develop a mental framework that models the reasoning process as a probabilistic trajectory $\tau = (S_0,...,S_n)$ (Markov Chain) in a subproblem space $S_t \in S$ of the actual problem. <p />
+When evaluating the model's baseline performance by selecting 10 random problems from GSM8K and running a single inference per question at temperature 0.1, I discover that the model uses a consistent reasoning pattern:
+1. **Thinking Phase** – where the model decomposes the problem into smaller subproblems and outlines a structured solution path.
+2. **Execution Phase** – where the model follows its planned approach to compute the final answer.
+
+This pattern is most definitely dictated by the training data of the Deepseek models. I also discovered that the model conveys characteristics of human "System 2 Thinking", taking more time to think about harder problems (spearman correlation of 0.63 between generation duration and difficulty of the question). <p />
+To assess the robustness of the model, I ran inference 10 times per question and used majority voting to determine correctness. Accuracy improved to 7 out of 10 cases (70%), suggesting that the reasoning pattern is indeed probabilistic and converges towards different trajectories . This effect can be reinforced by increasing the temperature of the model. I observe that the model, starting with an approach $S_0$, will converge towards a logically consistent trajectory L to answer the problem. This is consistent with the mental model. <p />
+To further investigate the robustness of the reasoning pattern, I use causal interventions. When I explicitly provided a correct thinking trajectory in the prompt, accuracy improved to 100%. This suggests that the selection of the approach $S_0$ is crucial for solving the task at hand. However, when I introduced a flawed trajectory, the model followed it 60% of the time, demonstrating that it does not always detect logical inconsistencies. Similarly, when the execution phase was manipulated to contradict the thinking phase, the model failed to recognize the inconsistency in all 10 generations, reinforcing the hypothesis that once a reasoning trajectory is selected, it is difficult to shift. Yet, reading through the individual generations, I find that sometimes the model manages to question itself and correct inconsistencies. To account for this behavior intended by the creators, I extend my model for the state St+1 of my model in a trajectory  to depend not only on the prior state $P(S_{t+1}| S_0,...,S_t) = P(S_{t+1}|S_t)$ but also something I introduced as the "questioning decision"  $Q_t$. Experiments varying the temperature of the model, suggest that temperature directly affects self-questioning behavior, which I modeled as $P(Q=1|S_t, T)$. <p />
+Comparing behaviour at different temperatures, I find that at temperature 0.1, the model mostly followed a fixed trajectory, whereas at temperature 0.6 (as recommended by DeepSeek), it frequently revises its reasoning, sometimes getting stuck and running out of tokens. While this sometimes allowed for error correction (improving accuracy to 7 out of 10 cases), it also caused repeated loops of self-doubt, where the model reconsidered the same steps multiple times. In one extreme case, the model revised its reasoning 25 times before running out of tokens. I conclude that the model's tendency to overthink can have two consequences: (1) excessively self-questioning leading to infinite "questioning cycles" and (2) self-correcting that captures mistakes and corrects them. Unfortunately, for this model and dataset, the former seems to be more pronounced as longer model generation seems to reduce the likelihood of answering the question correctly across all temperature settings even when accounting for question difficulty (correlation of 0.641 at p = 0.046). <p />
+Finally, I discover that the temperature T also plays a role in the exploration of the model. While the model only explores 2 logically consistent trajectories L for temperature T=0.1, this number jumps to 5 for T = 0.6. Hence, I model  $P(S_{t+1}| S_0,...,S_t) = P(S_{t+1}|S_t, Q_t, T)$. <p />
+Much more remains to be explored. For instance, one thing I cannot wrap my head around is the role of the two phases in the reasoning process. There is evidence that the "thinking phase" develops and later dictates the trajectory that is used in the "execution" phase to solve the problem but in almost all experiments both phases actually attempt to solve the problem. Except for the common trajectory, the individual computations often differ from each other. It is worth noting that there is a good chance that simply exploring a larger reasoning model allows to disentangle this conundrum. <p />
+Our experiments raise several questions that could be explored using mechanistic interpretability techniques:
+- Identifying Structural Components of Reasoning – Which attention heads or neurons govern the thinking phase versus the execution phase? Can we trace how the model breaks problems into subproblems?
+- Probing Self-Questioning Circuits – Can we locate and intervene on model components that trigger questioning behavior, helping to prevent unproductive self-doubt cycles or quantify uncertainty in the model?
+- Interpreting Trajectory Selection – How does the model decide on an initial approach (S₀)? Are certain layers responsible for setting the reasoning path?
+- Temperature-Dependent Reasoning Control – Can we control questioning behavior at the neuron level instead of relying on temperature?
+
+# Introduction
+
+Reasoning models represent a significant shift in LLM training, moving beyond traditional pattern recognition toward structured, step-by-step reasoning. These models use reasoning tokens or intermediate steps to break down prompts and consider multiple approaches before finalizing an answer. This pattern has not been thoroughly investigated from a mechanistic interpretability perspective. Our experiments investigate how such reasoning models perform on challenging tasks and what factors influence their problem-solving abilities. I focus on comparing reasoning-optimized approaches to standard language models, evaluating the benefits of step-by-step reasoning, and examining the effect of generation temperature on performance. <p />
+Due to compute limitations, this study focuses on <Reference id="7">DeepSeek R1 Distill Qwen 1.5B</Reference>, the smallest distillation of the <Reference id="9">DeepSeek R1 model family</Reference>, which is based on <Reference id="10">Qwen2.5-Math-1.5B</Reference>. It's important to note that the results from this experiment only have limited generalizability for the following reasons:
+- The model at hand was distilled. Distillation is an open research topic. I do not know to what extend distilled model actually behave like their teacher, hence, findings may not generalize to the original DeepSeek-R1 model
+- Results cannot be generalized to all reasoning models, as there is not one approach to reasoning. In fact, most of the approaches are not publicly available. DeepSeek-R1, for instance, was trained using "pure" RL (via <Reference id="4">Group Relative Policy Optimization</Reference>) while early research from OpenAI <Reference id="11">[3]</Reference> and a recent publication by Deepmind <Reference id="12">[4]</Reference> hints that other labs use different reinforcement learning techniques (Q*, tree-search,..) to induce reasoning.
+- The model used is very small compared to state-of-the-art models. Many of the characteristics, especially flaws, found below might change as the model size scales. For example, I would suggest this is most definitely the case for the simple calculation errors the model keeps doing.
+
+For our experiments, I used OpenAI's <Reference id="8">GSM8K dataset</Reference>, which contains grade school math problems. While seemingly simple, these problems proved challenging enough for the 1.5B parameter model. 
+Our research explores several key aspects of the model's reasoning capabilities:
+1. First, I explore baseline performance on the given dataset which includes: 
+    - Reasoning pattern
+    - Reasoning as a function to the difficulty of the question
+    - Deficiencies
+2. Next, we explore robustness of the reasoning process by
+    - Comparing reasoning trajectories across multiple runs
+    - Testing the impact of causal interventions on reasoning trajectories
+3. Then, we investigate the effect of temperature settings on reasoning behavior
+4. Finally, I give a short outlook on interesting research questions to use existing MechInterpret methods to investigate some of the findings across these experiments.
+
+# Setup
+I used HuggingFace to download and orchestrate the model. After extensive hyperparameter tuning/prompt engineering, I found a temperature of 0.1 to be most suitable for structured reasoning, despite DeepSeek's recommendation of 0.5-0.7 (Deepseek R1 HuggingFace). Later in this work, I also explore a temperature of 0.6 as I found this setting to be more helpful in some scenarios. An issue of high temperature is that the model happens to steer into something I describe as "questioning cycles" in which it would indefinitely question the last statement it made. <p />
+The model proved highly sensitive to prompt formatting. Through multiple iterations of prompt engineering, I find a prompt that lets the model consistently use the `<think>...</think>` tags to describe its thinking process. This prompt is a simple user prompt containing an instruction to "think step-by-step" and is succeeded by `<think>\n` to enforce "thinking" of the model (suggested by Deepseek). Also, the prompt requests results to be formatted in a `\boxed{}` format for simple extraction via regular expression. 
+
+# Mental model
+
+To make this word easier to understand, I would like to introduce a simple mental model to think about reasoning models. This will not only give us a framework to be consistent in the naming of certain characteristics but also help readers think about the problem at hand. Note, this is not an established scientific theory, but rather my own conceptual framework inspired by recent ideas in chain-of-thought reasoning <Reference id="13">[5]</Reference>. The goal here is to describe reasoning as a two-stage process with **logical trajectories** (consistent solution paths) while providing a simple formalization of the dynamics. By clearly distinguishing the stages of reasoning into “thinking” and “execution” and modeling the reasoning steps as a probabilistic state sequence, we can intuitively explain how an reasoning LLM might handle complex tasks and when it might change its line of thinking.
+
+**Two-stage reasoning: “Thinking” vs. “Execution”**
+As I will show later, the Deepseek models seem to have been conditioned on solving tasks in two main steps and final conclusion to return results:
+1. Thinking: Set up a plan to solve the problem <p />
+In the thinking stage, the LLM first decomposes the problem into a set of smaller subproblems or steps. This is analogous to a person breaking a difficult task into a checklist of simpler tasks. For instance, given a complicated math problem, the model might outline sub-tasks (e.g. *“compute value X”, then “use X to find Y”, etc.).
+2. Execution: Execute the plan established in a) <p />
+In the subsequent execution stage, the LLM works through these subproblems one by one, actually solving each part and using those results to progress toward the final answer.
+3. Extract result: Extract the final result and return to the user <p />
+This last stage is mainly there to return the result in a structured way for programmatic extraction via regular expression.
+
+The main idea behind reasoning is breaking down the problem $q$ into subproblems and then tackling each subproblem. This way, the model’s reasoning becomes more organized and manageable, mitigating the risk of getting lost in a long unstructured chain of text. In the following, I will consider this sequence of subproblems as a trajectory . To capture the notion of a reasoning trajectory more formally (in a simple, conceptual way), we model the process as a sequence of states $S_t \in S$ with probabilistic transitions. The analogy to Markov Chains is useful here. Let $S_t$ denote the state at reasoning step t, where $S_t \in S$ is the set of all possible states. Each state $S_t$ is a comprehensive representation of accumulated knowledge and derivations up to step t, including partial solutions, relevant context, and current subproblems under consideration. The reasoning process follows a first-order Markov property where:
+<div style={{ textAlign: 'center', margin: '20px 0' }}>
+  $$P(S_{t+1}| S_0,...,S_t) = P(S_{t+1}|S_t)$$ <br />
+</div>
+Intuitively, the probability of a particular transition $S_t→ S_{t+1}$ is higher if $S_{t+1}$ logically follows from $S_t$. In other words, the model is biased toward choosing the next reasoning step that makes the most sense given the current context. In this framework a trajectory $\tau = (S_0,...,S_n)$ has the joint probability:
+<div style={{ textAlign: 'center', margin: '20px 0' }}>
+  $$P(\tau) = P(S_0) \prod_t P(S_{t+1}|S_t)$$ <br />
+</div>
+Now the question is what does that mean for our model? Traditionally, our model will want to maximize the probability of the correct answer aka minimize the log likelihood of the trajectory:
+<div style={{ textAlign: 'center', margin: '20px 0' }}>
+  $$min L(\tau) = -\sum_t log P(S_{t+1}|S_t)$$ <br />
+</div>
+Under the assumption that logically consistent states have high probability of following each other, there is a high probability that the model will follow trajectories that maintain logical consistency: each solved subproblem should lead naturally to the next, forming a coherent line of reasoning. I call these trajectories a **logically consistent trajectory** $\tau_L$. This would
+look something like this in the graph below where $\tau_L = (S_{0,1},S_{1,1},S_{2,1})$ :
+
+<ImageWithSubtitle
+    src="/february/states.png"
+    alt="Attribution of compute across lifecycle"
+    title={<span>Attribution of compute across lifecycle</span>}
+/>
+
+However, reasoning is not always perfectly logical—errors and inconsistencies arise due to probabilistic token selection and inherent calculation mistakes. To mitigate these, the model has been taught, by selection of the training data, to incorporate an internal questioning mechanism, prompting it to re-evaluate its reasoning trajectory when necessary. <p />
+I model this “questioning process” by introducing a confidence score $\sigma(S_t)$ that is computed at each step t. The confidence score $\sigma(S_t)$ is used to parametrize a binary Markov process  $Q_t \in {0,1}$  with a transition probability:
+<div style={{ textAlign: 'center', margin: '20px 0' }}>
+  $$P(Q=1|S_t) = f(\sigma(S_t))$$ <br />
+</div>
+where  $Q_t=1$ indicates that the model detects uncertainty and decides to reassess its reasoning. In this case, the model will (1) revisit the current state (revision), (2) jump to a new trajectory, or (3) continue in the current trajectory. To integrate this questioning state into our mental model, I update the state transition distribution to depend on Qt:
+<div style={{ textAlign: 'center', margin: '20px 0' }}>
+  $$P(S_{t+1}| S_0,...,S_t) = P(S_{t+1}|S_t, Q_t)$$ <br />
+</div>
+With this our graph could look something like this:
+
+<ImageWithSubtitle
+    src="/february/states2.png"
+    alt="Attribution of compute across lifecycle"
+    title={<span>Attribution of compute across lifecycle</span>}
+/>
+
+One thing that follows from this framework is the choice of $S_0$ is extremely important. After choosing the initial state, the model will most likely converge into a logically consistent trajectory. The problem with that is that that does not necessarily mean that the result is correct. Let’s consider the task:
+```
+Compute the total number of cookies sold per week. 
+There are 7 variations of cookies. There are 5 cookies of each variation per day. 
+All cookies are sold.
+```
+The model could generate the trajectory: 
+```
+Compute cookies bought per customer: 
+5 customers/day * 5 cookies/customer =  25 cookies/day -> 
+Compute number of cookies bought by customers per week: 5 days * 25 cookies/day = 125 cookies
+```
+
+This trajectory is logically consistent but wrong because the first step, the approach is incorrect. Essentially, I expect there to be a small number of approaches to solve a problem. It will be essential for the model to select one of these approaches as.
+
+Putting everything together we can think of the reasoning task as shown in the graph below.
+
+<ImageWithSubtitle
+    src="/february/states3.png"
+    alt="Attribution of compute across lifecycle"
+    title={<span>Attribution of compute across lifecycle</span>}
+/>
+
+For now I have just modeled the two reasoning parts of the reasoning process as a single Markov chain each with a connecting element that is unknown. Although, it is almost certain that the “thinking” step dictates the state transitions of the “execute” phase while the states are parametrized independently. I am certain that one reason for the confusing relationship between the two parts is the small size of the model compared to the base model and I believe the roles of the two will be divided much clearer on a larger reasoning model.
+
+# Baseline
+I randomly selected 10 samples from the GSM8K dataset and evaluated model performance. The accuracy was assessed by matching the final answers using regular expressions, while GPT4o was used to evaluate the logical consistency of reasoning trajectories. The model reaches 50% accuracy on final answers at temperature 0.1 and ChatGPT deems 6 out of 10 reasoning trajectories as logically consistent. 
+
+## Consistent reasoning pattern
+With the prompt I finally ended up using, the model is consistently using `<think>...<\think>` to describe the plan it will use to solve the problem. The only exception is sample 3 where I could not verify this as the answer is cut off after reaching the “max_tokens” threshold of 2048. Beyond this high-level reasoning pattern that was induced by the creators, there are some other patterns:
+
+1. Thinking (`<think>...<\think>` pattern) <p />
+In this paragraph, it sets up a plan to answer the question. Interestingly this is always structured like so: “First,” ... -> “Next, ...” -> “Then, ...” -> “Finally, …”. In our mental model each of these steps can be interpreted as a subproblem.
+2. Execution (mostly initiated by `**Solution:**`) <p />
+This paragraph contains an enumeration in which the model follows the steps of the plan set up in the first paragraph. 
+3. Return the solution <p />
+The last paragraph often start with `**Final answer:**`. It returns the answer to the question in one sentence where the concrete number is formatted as requested (`/boxed{answer}`).
+
+Unfortunately, the actual application of the pattern is sometimes flawed. Here are some observations:
+- Only the thinking paragraph seems to be consistently used across all solutions. The remaining pattern is sometimes discarded, mostly when the model gets caught up in “questioning cycles”. 
+- The pattern is not mutually exclusive. Often, the model will start solving the task in the “thinking” paragraph already and just repeat the same computations in the second paragraph. There are also examples of the model repeating complete paragraphs. 
+
+## Model thinks harder about harder problems (System 2 thinking)
+
+The model demonstrated an intuitive pattern of "thinking harder" about more difficult problems. To quantify this, I timed myself solving all 10 questions as a proxy for difficulty, ranking the problems  from 10 (easiest) to 1 (hardest) accordingly. This is obviously only a weak proxy for the actual difficulty of the question for an AI but it gives us a metric to differentiate easy from hard problems. <p />
+Below, you can see the time it took for the model to solve each problem and how this correlates with the difficulty of the problem. When can clearly see a positive correlation (positive since the difficulty scale is inverted (1 is hardest)) between difficulty and task duration hinting system 2 thinking.
+
+<ImageWithSubtitle
+    src="/february/duration_difficulty.png"
+    alt="Attribution of compute across lifecycle"
+    title={<span>Attribution of compute across lifecycle</span>}
+/>
+
+## Mistakes in simple arithmetic computations
+
+From time to time the model get’s simple computations wrong. Examples include:
+- “Wait, hold on, 6 +12 is 8, plus 38 is 56. Yeah, that's correct.”
+- “then Jake must have eaten 10 minus 3, which is 17 slices. So, J is 17.”
+- “Votes for A = 22% of 100 = 0.22 * 100. Hmm, 0.22 times 100. Let me compute that. 0.22 * 100 is the same as 22 * 1, which is 22.”
+
+I believe this problem does alleviate as the model size increases. In my personal experience large models have become quite good at simple arithmetic calculations.
+
+## Model “overthinks”
+
+Almost all 5 incorrect answers are because of the model questioning itself too much. In our mental model that could mean that (1) the state probability distribution conditioned $P(S_{t+1}|S_t, Q_t)$ is not well parameterized for $Q_t=1$ and/or (2)  the questioning transition function $f(\sigma(S_t))$ is not well parametrized. Here are some examples for the model overthinking:
+1. In the most difficult task (according to my heuristic), the model reaches the correct solution (4) but tries to solve the task from scratch over and over again, each time reconsidering different aspect of the task. In total the model iterates over 25 times before running out of tokens (max_tokens set to 2048). <p />
+```
+Wait, maybe I need to think in terms of the maximum allowed.
+Wait, maybe I need to interpret it as if the cost per class is more than $10, then they won't sign him up again.
+Wait, maybe I misread the problem.
+Wait, let me verify that.
+Wait, so that seems to be the answer. But let me think again.
+```
+2. In another task the model “questions” itself into the wrong answer. First, it correctly answers the number of pizza slices eaten by the participants (31), But after questioning that state 10-15 times, it finally goes over to compute the number of slices there are (which was not the task).
+
+This last point raises the hypothesis that too much overthinking ($P(Q=1|S_t) = f(\sigma(S_t))$ high) hurts performance. To further investigate this, I started with plotting the average duration of wrong and correct	answers. In the bar plot below, we can see that incorrect answers take a lot, 165 seconds or 221%, longer to generate. This could indicate that answers that take longer tend to be more wrong than shorter ones.
+
+<ImageWithSubtitle
+    src="/february/duration_correctness_low.png"
+    alt="Attribution of compute across lifecycle"
+    title={<span>Attribution of compute across lifecycle</span>}
+/>
+
+But to make this argument, we need to consider the difficulty of the problem as a key confounding factor (harder questions take longer to answer). Without accounting for difficulty, the correlation between answer duration and correctness is -0.671 (p = 0.034). When adjusting for difficulty, the partial correlation remains negative at -0.641 (p = 0.046), indicating a statistically significant inverse relationship at the 5% level. This supports the hypothesis that “over-questioning” may impact correctness.
+
+# Robustness 
+To probe the model's robustness and better understand reasoning mechanics, I explored how consistent the model's responses would be across multiple runs.
+
+## Repetition
+
+To assess the model’s robustness and gain insight into its reasoning process, i.e., how concentrated the state probability distribution $P(S_{t+1}|S_t, Q_t)$ is, I ran inference for each of the 10 samples 10 times sequentially. For the 10 trials on each sample I use majority voting for evaluating the model on the sequence. Interestingly, the accuracy improves from 50% to 70%. Intuitively this result makes sense as repetition reduces the variance of the estimate.
+| Sample | Difficulty (1=hardest, 10=easiest) | Correctness (Majority voting) | Consistency (# correct/n) | Different responses |
+|--------|-----------------------------------|---------------------------|--------------------------|---------------------|
+| 1      | 9                                 | Yes                       | 60%                      | 120 (correct), 132, 20, 1200 |
+| 2      | 3                                 | Yes                       | 40%                      | 56 (correct), 22, 8, 18, 4, 3, 46 |
+| 3      | 1                                 | No                        | 10%                      | 10, 5, -10, 4 (correct), 60, 6., 3. |
+| 4      | 4                                 | Yes                       | 30%                      | 17, 31 (correct), 7, 1, 21, 32, 10 |
+| 5      | 10                                | Yes                       | 100%                     | 360 |
+| 6      | 5                                 | No                        | 10%                      | 18, 55, 636.333, 550, 1800 (correct), 27, 675.20 |
+| 7      | 7                                 | No                        | 10%                      | 50 (correct), 33, 45, 4, 43.9, 45., 34, 49., 11 |
+| 8      | 2                                 | Yes                       | 100%                     | 27 (correct) |
+| 9      | 8                                 | Yes                       | 90%                      | 76 (correct), 80 |
+| 10     | 6                                 | Yes                       | 50%                      | 40, 88, 48 (correct), 8 |
+| **Avg.**|                                  | **70%**                   | **56%**                  |                     |
+
+### In-depth analysis of question 1
+
+Now let’s get into the details and investigate the reasoning trajectories with a concrete example. Let’s start with an example the model was able to solve with relatively high accuracy (6 out of 10 times), sample 1. Here the question is: <p />
+```Tim spends 6 hours each day at work answering phones. It takes him 15 minutes to deal with a call. How many calls does he deal with during his 5 day work week?```
+
+The correct result is obviously: 6 hrs/day * 4 calls/hr * 5 days/week = 120 calls. In general, I can see two logically consistent trajectory L that work for this answer: <p />
+1. $\tau_{L,1}$
+    - S0: Determine number of hrs Tim works per week
+    - S1: Convert hrs to min
+    - S2: Calls/week
+
+2. $\tau_{L,2}$
+    - S0: Determine number of mins Tim works per day 
+    - S1: Compute calls/day
+    - S2: Calls/week
+
+These two trajectories are actually employed by the model and mostly lead to the correct answer. 
+| Generation | Approach (Thinking) | Approach (Execution) | Correct? | Error |
+|------------|---------------------|----------------------|----------|-------|
+| 1          | L,1                 | L,1                  | No       | Computation error |
+| 2          | L,2                 | L,2                  | Yes      |       |
+| 3          | L,2                 | L,2                  | Yes      |       |
+| 4          | L,2                 | L,2                  | Yes      |       |
+| 5          | L,1                 | L,1                  | No       | Only computes calls per 180 mins all of the sudden |
+| 6          | L,2                 | L,2                  | Yes      |       |
+| 7          | None                | None                 | No       | Tries to zero-shot problem |
+| 8          | L,1                 | L,1                  | Yes      |       |
+| 9          | L,1                 | L,1                  | No       | Computation error |
+| 10         | L,1                 | L,1                  | Yes      |       |
+
+This is a very interesting observation, we can observe:
+1. In all answers, the “execution” follows the same trajectory as pointed out in the “thinking” process. The probabilities marked with a question mark in the graph below seem to equal to 1. This hints that the model only computes the state transitions once in the “thinking” part $P_{think}(S_{t+1}|S_t, Q_t)$ and the state transitions in the “execution” part are deterministic.
+
+<ImageWithSubtitle
+    src="/february/states_zoom.png"
+    alt="Attribution of compute across lifecycle"
+    title={<span>Attribution of compute across lifecycle</span>}
+/>
+
+2. When following one of the two valid plans, the model will almost every time reach its goal (assuming no computation errors). This underlines our hypothesis that the choice of $S_0$ is essential.  
+
+As I go into the details of the generations, I make the following additional observations:
+- While the “execution” paragraph will follow the approach lined out in the “thinking” paragraph, it will not straight away use the same numbers. In this experiment 8 out of 10 generations compute the solution already in the “thinking” part. Nevertheless, this does not mean that this solution equals the final solution. The second paragraph recomputes the result independently. In a surprising 6 out of 8 cases where the “thinking” part already computes a solution, the final answer differs from that answer. The correction is not always towards the correct answer. Here is an example:
+```Four generations, fail compute the number of calls per day correctly (6 hrs * 4 calls/hr = 24). They all come out with 72 calls per day. Somehow the final answer of all four answers is correct.```
+This is surprising. It hints while the “thinking” paragraph dictates the state transition, the “execution paragraph will find its own parametrization of to the subproblem  $S_t$. I would have assumed that either (1) the “thinking” part does not actually solve any of the subproblems or (2) the “execution” part reflects on the “thinking” part's solution to eventually take on correct results.
+- Again, I see some silly calculation mistakes: 
+    - 360 minutes divided by 15 minutes per call equals 72 calls per day.
+    - 1800/15 = 360
+    - 2,160 minutes / 15 minutes/call = 0.14
+    - 30 hours * 60 minutes/hour = 2,160 minutes
+
+## Causal intervention
+
+Building on our trajectory analysis, I conducted experiments to intervene in the model's reasoning process. Here I would like to answer the following questions:
+1. If we explicitly provide a correct “thinking” plan in the prompt, will the model follow this trajectory and produce more accurate answers? Will the execution phase still vary across generations?
+2. If we manipulate the beginning of the “execution” phase to contradict the initial “thinking” step, will the model recognize and correct the inconsistency, or will it default to one path?
+3. If we introduce an incorrect reasoning trajectory in the “thinking” phase, will the model detect and reject the flaw, or will it blindly follow the suggested reasoning?
+4. If the execution phase begins with an obvious calculation error, will the model validate and correct it, or will it accept the flawed computation?
+
+These experiments are designed to examine whether the model adheres to a consistent logical trajectory or whether external interventions can easily shift its reasoning process. In our probabilistic state-space mental model, this equates to testing how the initial state $S_0$ influences subsequent transitions $P(S_{t+1}| S_t, Q_t)$ , and whether questioning mechanisms $Q_t$ allow the model to recover from flawed reasoning paths.
+
+### Providing an approach
+
+# Temperature
+
+# Interpretability (Outlook)
+
+---
+
+# References
+
+<References>
+    <li id="cite-1"><a href="https://www.matsprogram.org/apply">https://www.matsprogram.org/apply</a></li>
+    <li id="cite-2"><a href="https://github.com/ChrisTho23/MATS">https://github.com/ChrisTho23/MATS</a></li>
+    <li id="cite-3"><a href="https://github.com/ChrisTho23/MATS/tree/main/src/results">https://github.com/ChrisTho23/MATS/tree/main/src/results</a></li>
+    <li id="cite-4"><a href="https://arxiv.org/pdf/2402.03300">https://arxiv.org/pdf/2402.03300</a></li>
+    <li id="cite-5"><a href="https://openreview.net/forum?id=w6nlcS8Kkn">https://openreview.net/forum?id=w6nlcS8Kkn</a></li>
+    <li id="cite-6"><a href="https://arxiv.org/abs/2203.11171">https://arxiv.org/abs/2203.11171</a></li>
+    <li id="cite-7"><a href="https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B">https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B</a></li>
+    <li id="cite-8"><a href="https://huggingface.co/datasets/openai/gsm8k">https://huggingface.co/datasets/openai/gsm8k</a></li>
+    <li id="cite-9"><a href="https://github.com/deepseek-ai/DeepSeek-R1">https://github.com/deepseek-ai/DeepSeek-R1</a></li>
+    <li id="cite-10"><a href="https://huggingface.co/Qwen/Qwen2.5-Math-1.5B">https://huggingface.co/Qwen/Qwen2.5-Math-1.5B</a></li>
+    <li id="cite-11"><a href="https://arxiv.org/abs/2305.20050">https://arxiv.org/abs/2305.20050</a></li>
+    <li id="cite-12"><a href="https://arxiv.org/html/2408.03314v1">https://arxiv.org/html/2408.03314v1</a></li>
+    <li id="cite-13"><a href="https://arxiv.org/abs/2410.17635#:~:text=fundamental%20logic%20of%20human%20cognition%2C,significantly%20enhances%20efficiency%20but%20also">https://arxiv.org/abs/2410.17635#:~:text=fundamental%20logic%20of%20human%20cognition%2C,significantly%20enhances%20efficiency%20but%20also</a></li>
+    
+</References>

@@ -1,5 +1,5 @@
 "use client";
-import { ArrowLeft, Eye, Github, Linkedin } from "lucide-react";
+import { ArrowLeft, Github, Linkedin } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 
@@ -10,10 +10,9 @@ type Props = {
     date?: string;
     picture?: string;
   };
-  views: number;
 };
 
-export const Header: React.FC<Props> = ({ blog, views }) => {
+export const Header: React.FC<Props> = ({ blog }) => {
   const ref = useRef<HTMLElement>(null);
   const [isIntersecting, setIntersecting] = useState(true);
 
@@ -46,17 +45,6 @@ export const Header: React.FC<Props> = ({ blog, views }) => {
       >
         <div className="container flex flex-row-reverse items-center justify-between p-6 mx-auto">
           <div className="flex justify-between gap-8">
-            <span
-              title="View counter for this page"
-              className={`duration-200 hover:font-medium flex items-center gap-1 ${
-                isIntersecting
-                  ? " text-zinc-400 hover:text-zinc-100"
-                  : "text-zinc-600 hover:text-zinc-900"
-              } `}
-            >
-              <Eye className="w-5 h-5" />{" "}
-              {Intl.NumberFormat("en-US", { notation: "compact" }).format(views)}
-            </span>
             <Link
               target="_blank"
               href="https://www.linkedin.com/in/christophe-thomassin/"
