@@ -4,8 +4,6 @@ import { allBlogs } from "contentlayer/generated";
 import { Mdx } from "@/app/components/mdx";
 import { Header } from "./header"; 
 import "./mdx.css";
-import { ReportView } from "./view"; 
-import { Redis } from "@upstash/redis";
 import { TableOfContents } from "@/app/components/toc";
 
 export const revalidate = 60;
@@ -15,8 +13,6 @@ type Props = {
     slug: string;
   };
 };
-
-const redis = Redis.fromEnv();
 
 export async function generateStaticParams(): Promise<Props["params"][]> {
   return allBlogs
@@ -78,13 +74,9 @@ export default async function PostPage({ params }: Props) {
     notFound();
   }
 
-  const views =
-    (await redis.get<number>(["pageviews", "blog", slug].join(":"))) ?? 0;
-
   return (
     <div className="bg-zinc-50 min-h-screen">
-      <Header blog={blog} views={views} /> 
-      <ReportView slug={blog.slug} /> 
+      <Header blog={blog} /> 
       
       <TableOfContents toc={blog.toc} />
 

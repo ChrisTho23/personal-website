@@ -107,9 +107,47 @@ export const Page = defineDocumentType(() => ({
   computedFields,
 }));
 
+export const Research = defineDocumentType(() => ({
+  name: "Research",
+  filePathPattern: "./research/**/*.mdx",
+  contentType: "mdx",
+
+  fields: {
+    published: {
+      type: "boolean",
+    },
+    title: {
+      type: "string",
+      required: true,
+    },
+    description: {
+      type: "string",
+      required: true,
+    },
+    date: {
+      type: "date",
+    },
+    venue: {
+      type: "string",
+      required: true,
+    },
+    authors: {
+      type: "list",
+      of: { type: "string" },
+    },
+    paperUrl: {
+      type: "string",
+    },
+    image: {
+      type: "string",
+    },
+  },
+  computedFields,
+}));
+
 export default makeSource({
   contentDirPath: "./content",
-  documentTypes: [Page, Project, Blog],
+  documentTypes: [Page, Project, Blog, Research],
   mdx: {
     remarkPlugins: [remarkGfm, remarkToc, remarkMath],
     rehypePlugins: [

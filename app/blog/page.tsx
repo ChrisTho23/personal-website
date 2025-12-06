@@ -3,24 +3,10 @@ import React from "react";
 import { allBlogs } from "contentlayer/generated";
 import { Navigation } from "../components/nav";
 import { Card } from "../components/card";
-import { Post } from "./post";
-import { Redis } from "@upstash/redis";
-import { Eye } from "lucide-react";
-
-const redis = Redis.fromEnv();
 
 export const revalidate = 60;
 
 export default async function BlogPage() {
-  const views = (
-    await redis.mget<number[]>(
-      ...allBlogs.map((b) => ["pageviews", "blog", b.slug].join(":")),
-    )
-  ).reduce((acc, v, i) => {
-    acc[allBlogs[i].slug] = v ?? 0;
-    return acc;
-  }, {} as Record<string, number>);
-
   const sortedBlogs = allBlogs
     .filter((b) => b.published)
     .sort(
@@ -49,24 +35,16 @@ export default async function BlogPage() {
             <Card key={blog.slug}>
               <Link href={`/blog/${blog.slug}`}>
                 <article className="relative w-full h-full p-4 md:p-8">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="text-xs text-zinc-100">
-                      {blog.date ? (
-                        <time dateTime={new Date(blog.date).toISOString()}>
-                          {Intl.DateTimeFormat(undefined, {
-                            dateStyle: "medium",
-                          }).format(new Date(blog.date))}
-                        </time>
-                      ) : (
-                        <span>SOON</span>
-                      )}
-                    </div>
-                    <span className="flex items-center gap-1 text-xs text-zinc-500">
-                      <Eye className="w-4 h-4" />{" "}
-                      {Intl.NumberFormat("en-US", { notation: "compact" }).format(
-                        views[blog.slug] ?? 0,
-                      )}
-                    </span>
+                  <div className="text-xs text-zinc-100">
+                    {blog.date ? (
+                      <time dateTime={new Date(blog.date).toISOString()}>
+                        {Intl.DateTimeFormat(undefined, {
+                          dateStyle: "medium",
+                        }).format(new Date(blog.date))}
+                      </time>
+                    ) : (
+                      <span>SOON</span>
+                    )}
                   </div>
 
                   <h2

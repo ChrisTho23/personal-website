@@ -72,7 +72,7 @@ export default function RootLayout({
       <body
         className={`bg-black ${process.env.NODE_ENV === "development" ? "debug-screens" : undefined}`}
       >
-        <Alert /> {/* Add the Alert component here */}
+        {/* <Alert /> */}
         {children}
         <ChatBot />
       </body>

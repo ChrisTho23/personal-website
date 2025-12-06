@@ -5,8 +5,9 @@ import Particles from "./components/particles";
 
 const navigation = [
   { name: "Blog", href: "/blog" },
+  { name: "Research", href: "/research" },
   { name: "Projects", href: "/projects" },
-  { name: "Contact", href: "/contact" },
+  { name: "About Me", href: "/aboutme" },
 ];
 
 // Custom hook to check if this is the first visit
@@ -66,8 +67,22 @@ export default function Home() {
       />
       <div className={`my-16 text-center ${isFirstVisit ? "animate-fade-in" : ""}`}>
         <h2 className="text-sm text-zinc-400 ">
-          Hi there, this is my website. Feel free to explore!
+          Hi there, this is my website :)
         </h2>
+      </div>
+      <div className="absolute bottom-4 text-center">
+        <p className="text-xs text-zinc-600">
+          All credit for the beautiful design goes to {" "}
+          <a
+            href="https://github.com/chronark/chronark.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-zinc-500 transition-colors"
+          >
+            @chronark/chronark.com
+          </a>
+          {" "} (MIT License)
+        </p>
       </div>
     </div>
   );
