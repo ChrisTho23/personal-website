@@ -1,5 +1,5 @@
 "use client";
-import { ArrowLeft, Github, Linkedin } from "lucide-react";
+import { ArrowLeft, Github, Linkedin, Twitter } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 
@@ -66,6 +66,15 @@ export const Header: React.FC<Props> = ({ blog }) => {
                 } `}
               />
             </Link>
+            <Link target="_blank" href="https://x.com/chrisoutho">
+              <Twitter
+                className={`w-6 h-6 duration-200 hover:font-medium ${
+                  isIntersecting
+                    ? " text-zinc-400 hover:text-zinc-100"
+                    : "text-zinc-600 hover:text-zinc-900"
+                } `}
+              />
+            </Link>
           </div>
 
           <Link
@@ -81,27 +90,20 @@ export const Header: React.FC<Props> = ({ blog }) => {
         </div>
       </div>
       <div className="container mx-auto relative isolate overflow-hidden py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 text-left flex flex-col items-start"> {/* Change text alignment to left */}
-          <div className="w-full flex justify-between items-start">
-            <div className="max-w-2xl lg:max-w-none">
-              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl font-display">
-                {blog.title}
-              </h1>
-            </div>
-            {blog.date && (
-              <div className="text-base font-semibold leading-7 text-white">
-                <time dateTime={new Date(blog.date).toISOString()}>
-                  {Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(
-                    new Date(blog.date)
-                  )}
-                </time>
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 text-left flex flex-col items-start">
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-10 lg:p-12 border border-white/20 shadow-2xl w-full">
+            <div className="w-full flex justify-between items-start">
+              <div className="max-w-2xl lg:max-w-none">
+                <h1 className="text-4xl font-bold tracking-tight text-black sm:text-6xl font-display drop-shadow-lg">
+                  {blog.title}
+                </h1>
               </div>
-            )}
-          </div>
-          <div className="max-w-2xl lg:mx-0 mt-6">
-            <p className="text-lg leading-8 text-white">
-              {blog.description}
-            </p>
+            </div>
+            <div className="max-w-2xl lg:max-w-none mt-8">
+              <p className="text-lg leading-8 text-black">
+                {blog.description}
+              </p>
+            </div>
           </div>
         </div>
       </div>

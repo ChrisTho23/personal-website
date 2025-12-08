@@ -33,26 +33,29 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({ toc }) => {
   };
 
   return (
-    <div className="toc-container mx-auto my-8 p-4 rounded-lg shadow-lg bg-gradient-to-tl from-zinc-300/10 via-zinc-300 to-zinc-300/10 max-w-3xl">
-      <h2 className="text-4xl font-bold mb-4">Table of Contents</h2>
-      <ul>
+    <nav className="toc-container p-5 rounded-lg bg-zinc-100/80 border border-zinc-200">
+      <h2 className="text-xl font-bold mb-4 text-zinc-800">Contents</h2>
+      <ul className="space-y-2">
         {toc.map((item, index) => {
           const chapterNumber = getChapterNumber(item.level);
-          const itemStyle = item.level === 1
-            ? "mt-2 scroll-m-20 text-medium font-normal text-black"
-            : "mt-2 scroll-m-20 text-medium font-normal text-black ml-0.5";
-          
           const slug = generateSlug(item.title);
 
           return (
-            <li key={index} className={item.level > 1 ? "ml-8" : ""}>
-              <a href={`#${slug}`} className={`text-black hover:underline ${itemStyle}`}>
+            <li key={index} className={item.level > 1 ? "ml-5" : ""}>
+              <a 
+                href={`#${slug}`} 
+                className={`block py-1 hover:text-blue-600 hover:underline transition-colors ${
+                  item.level === 1 
+                    ? "text-base font-medium text-zinc-700" 
+                    : "text-sm text-zinc-500"
+                }`}
+              >
                 {chapterNumber} {item.title}
               </a>
             </li>
           );
         })}
       </ul>
-    </div>
+    </nav>
   );
 };

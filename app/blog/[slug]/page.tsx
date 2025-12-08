@@ -78,9 +78,13 @@ export default async function PostPage({ params }: Props) {
     <div className="bg-zinc-50 min-h-screen">
       <Header blog={blog} /> 
       
-      <TableOfContents toc={blog.toc} />
+      {/* Fixed TOC on the left - hidden on mobile, starts below header */}
+      <aside className="hidden xl:block fixed left-6 top-12 w-72 max-h-[calc(100vh-6rem)] overflow-y-auto">
+        <TableOfContents toc={blog.toc} />
+      </aside>
 
-      <article className="px-4 py-4 -mt-10 mx-auto prose prose-zinc prose-quoteless max-w-3xl">
+      {/* Main content - stays centered */}
+      <article className="px-4 py-12 mx-auto prose prose-zinc prose-quoteless max-w-3xl">
         <Mdx code={blog.body.code} />
       </article>
     </div>

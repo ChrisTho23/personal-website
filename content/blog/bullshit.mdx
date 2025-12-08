@@ -1,163 +1,181 @@
 ---
 title: "Cut the bullshit: Are LLMs able to quantify (un)certainty?"
-description: "Everybody's talking about agents. I attended Berkeley's CS-294-196 to understand what agents are all about."
+description: "Models are getting so good, hallucinations become hard to spot. Here, I explore if model internals capture certainty of the model, potentially aiding detection and prevention of hallucinations."
 date: "2025-09-11"
-published: false
-picture: "/december/image.png"
+published: true
+picture: "/blogs/bullshit/background.png"
 ---
 
-This blog is part of the [Large Language Model Agents course](https://llmagents-learning.org/f24) I took at UC Berkeley. As LLMs revolutionize our everyday life, this course sheds light on how LLM agents—LLM-powered systems that can reason and take actions to interact with their environment—will open new frontiers in task optimization and personalization. Inspired by this journey from LLM foundations over reasoning and planning to embodied agents, I would like to use this blog to summarize my learnings from the 12 lectures of this course. I will focus on the foundational paradigms in LLM agents and briefly explore [AutoGen](https://microsoft.github.io/autogen/0.4.0.dev11/index.html), Microsoft’s Python framework for orchestrating agents. A rudimentary knowledge of LLMs is expected.
+# Motivation
 
-# What are agents?
+With every new release, most recently [ChatGPT 5](https://openai.com/index/introducing-gpt-5/), conversational LLMs get better and better. Better performance on benchmarks (if that means anything to you), fancy UIs, new tools, the list goes on and on… At the same time, caveats like hallucinations become more and more subtle. Reasons for this improvement include scaling of model size, training data, and training compute (Kaplan et al., 2020), the reasoning paradigm (Brown et al., 2020), and adaptations in the post-training pipeline, e.g., including more RLHF examples teaching the model to refuse answers if unsure. However, particularly in complex contexts like coding and math, hallucinations are still common and arguably even more annoying than before as the model's conversational capabilities have become so good that models can convince users of untruths without them noticing. 
 
-While the literature does not provide a widely accepted definition for LLM agents, an agent can be described as an intelligent system that interacts with some environment. Think of the environment as every possible system you can imagine, e.g., the real world, a web application, a GitHub repo, or a game.
+In this proof-of-concept, I ask: Do models know when they are 'bullshitting' the user? Taking inspiration from the paper "Persona Vectors: Monitoring and controlling character traits in Language Models" (Chen et al., 2025), I inspect the residual stream of [OpenAI's gpt-oss](https://openai.com/index/introducing-gpt-oss/) for activations that indicate the model is 'bullshitting' the user by inventing aspects of the generation. Although specific, I believe my results give reason to believe such activation vectors can be useful for downstream AI safety tasks such as hallucination detection and prevention. 
 
-Traditionally, in the field of machine learning, the term “agent” is used in reinforcement learning, where an agent’s policy is trained to maximize a reward retrieved from its environment upon performing an action based on its current state.
+I design two experiments that demonstrate useful applications of 'bullshitting vectors'. First, I show that a 'bullshit detection vector' extracted from the residual stream of layer 14 can be used as a tool to detect 'bullshitting' in model generations. Based on the cosine similarity of the activations observed during generation and the 'bullshit detection vector', I train a classifier that obtains perfect 1.0 ROCAUC on a hold-out set in distinguishing 'bullshitting' and truthful model generations (<FigRef id={11} />). Second, I extract a 'bullshit steering vector' from the residual stream of layer 14 to approximately represent the 'bullshitting'-behaviour in the activation space of the residual stream of the model. I show that by steering the model during generation with this 'bullshitting vector', the model reduces its bullshitting behaviour by 58.33% on a hold-out set as per the evaluation of a well-aligned LLM judge (<FigRef id={13} />). The source code to this project can be found [here](https://github.com/ChrisTho23/cut_the_bullshit).
 
-<ImageWithSubtitle
-    src="/december/image1.png"
-    alt="Schematic overview of agents in RL"
-    title={<span>Schematic overview of agents in RL <Reference id="1">[1]</Reference></span>}
+> In this write-up I use the term 'bullshitting' as a synonym for the more commonly known term hallucinations. The inspiration of using the term 'bullshitting' stems from Anthropic's (excellent) paper "On the Biology of a Large Language Model" (Lindsey et al., 2025). Please check out their paper, particularly Chapter 11, to get a better idea what to understand under 'bullshitting'-behaviour. Having established the term 'bullshitting', I will no longer put it in quotation marks.
+
+> Please note this is a proof of concept. I am well-aware that the task modeled here is very specific and not representative of all bullshitting behaviours. Owing to the small number of samples, randomness cannot be fully excluded as a contributing factor to the observed results. Finally, further experiments with other LLMs would have to be conducted to determine if the findings generalize to all kinds and sizes of LLMs. 
+
+> This is not related to my current research at Stanford and was just a fun side project. Nevertheless, I remain very interested in this topic and I am happy to collaborate on follow-up work.
+
+# Experiments
+
+Using LLMs in the context of AI research, I am quite annoyed by hallucinations, particularly since these become more and more subtle and hard to recognize as models become more powerful. One setting in which I encounter a lot of hallucinations with the latest generation of LLMs is in method signatures in common software packages, mostly Python in my case. Hence, I try to replicate this behaviour for this proof-of-concept. 
+
+## Setup
+
+I choose to use OpenAI's recent gpt-oss model series (20B version due to compute constraints) for this experiment as it seems to be the most capable open-source model of that size available to that point. Using ChatGPT 5, I simulate 15 different examples of users asking the model for a specific method/signature of a commonly known software package. For each example I obtain 3 prompts, a bullshit prompt (BS+), a control prompt (BS-), and an anti-bullshit prompt (BS--). The bullshit prompt asks for a method of a commonly known Python software package that does NOT exist, often leading the model to bullshit this method. The control prompt asks for an existing method of that software package. Finally, the anti-bullshit prompt is identical to the BS+ prompt but includes fake search results from an imaginary web search tool that indicate that the aforementioned method does not exist. Such an example can be found in <FigRef id={1} />.
+
+<Figure
+    id={1} 
+    src="/blogs/bullshit/bs_example.png"
+    alt="Example of bullshitting."
+    caption="Example of bullshitting."
 />
 
-Now that LLMs have reached or even surpassed human intelligence (OpenAI’s GPT-4 managed to score an IQ of 120 on the Norway Mensa IQ test, where humans average 103) and are trained on data with internet-level scale, yielding a system skilled in a wide array of disciplines, it seems reasonable that LLMs can directly be employed to build such “intelligent” systems without having to tune their weights according to the task and environment. This realization paved the way for LLM agents, which some believe will create the value GenAI has been praised to provide through task optimization and personalization. Already today, there are impressive demos of LLM agents popping up left and right (e.g., GitHub Copilot solving coding issues, Tesla’s Optimus serving beer, Anthropic’s Claude booking flights), yet reliable real-world applications are still missing.
+## Baseline
 
-<ImageWithSubtitle
-    src="/december/image2.png"
-    alt="Tesla's Optimus serving beer"
-    title={<span>Tesla's Optimus serving beer <Reference id="2">[2]</Reference></span>}
+I start by running a baseline experiment. The goal here is to make sure that (1) the gptoss-20b model reacts as expected to the three prompts (aka bullshits for the BS+ prompt, does not bullshit for the BS- prompt, and tells the user the method does not exist for the BS-- prompt) and (2) an evaluator is able to accurately spot when the model is bullshitting. For this, I run inference on the model using all three prompts as user prompts. Unlike Chen et al., 2025, I decided to use the official ChatGPT system prompt (obtained from [here](https://www.reddit.com/r/OpenAI/comments/1misogc/system_prompt_for_gptoss120b/)) and not to create a custom system prompt incentivizing the wanted behaviour. Since the prompt is essential to the model generation, I believe this setting is more realistic and thus, makes the subsequent finding more relevant. For the BS-- case I append a short instruction to the prompt to not answer the question if there are any doubts on the existence of any of the items the user mentions to make sure the model reliably denies an answer in this case. 
+
+Next, realizing gptoss-20b is a reasoning model (although reasoning is set to 'low' in the system prompt to reduce number of output tokens), I decide to split the model generations in its individual components, the prompt, the reasoning ('thinking'), and the final answer displayed to the user ('final') using the special tokens introduced by the [harmony tokenizer](https://github.com/openai/harmony). Naturally, I also evaluate the complete generation ('total' = 'thinking' + 'final'). Doing so, I will be able to spot the source of 'bullshitting' more granularly. This will also make later steps in which I average residual stream activations across tokens more accurate.
+
+An example of the generations can be found in <FigRef id={2} />, <FigRef id={3} />, and <FigRef id={4} />. I want to note here that gptoss-20b is a surprisingly capable model considering its size. It was not easy to find prompts that reliably worked. I find this underlines the relevance of subsequent findings.
+
+<Figure
+    id={2} 
+    src="/blogs/bullshit/bs+_gen.png"
+    alt="Example generation for BS+ prompt. The model invents a class signature in the final response."
+    caption="Example generation for BS+ prompt. The model invents a class signature in the final response."
 />
 
-# Agent features
-
-As discussed in the last paragraph, the LLM is what is supposed to bring the “intelligence” into the system. The sampling procedures employed in LLMs during inference make the model probabilistic, which brings advantages and disadvantages. On the upside, the models are much more versatile than typical digital systems with their tree-based logic. They are not limited to a specific set of input formats and requests. On the downside, this probabilistic nature, paired with the mix of training data and post-training procedures, also leads to hallucinations, which are not yet fully understood. Hence, to make LLM agents reliable and also use them in high-stakes applications, we need to do more engineering around the LLM. While best practices are still evolving in this relatively new field, there are already some features that you will find in almost every LLM agent (see the sketch of a typical LLM agent system design below).
-
-<ImageWithSubtitle
-    src="/december/image3.png"
-    alt="Schematic overview of LLM agents system architecture"
-    title={<span>Schematic overview of LLM agents system architecture <Reference id="3">[3]</Reference></span>}
+<Figure
+    id={3} 
+    src="/blogs/bullshit/bs-_gen.png"
+    alt="Example generation for BS- prompt. The model accurately recalls the class signature from memory."
+    caption="Example generation for BS- prompt. The model accurately recalls the class signature from memory."
 />
 
-## Prompt Engineering
-
-Prompt engineering might be the most important feature in agent systems. As we know, LLMs are queried via text messages called prompts. The two most important prompts used for almost every interaction with an LLM are the user prompts and the system prompt. Due to the autoregressive nature of LLMs, pre-pending a good prompt to the model generation will increase the conditional probability of a satisfying completion. Hence, over time, prompting has become an art, describing many best practices to optimize prompts for better results. This includes techniques like adding context, few-shot prompting, and chain-of-thought, which we will discuss shortly. Effective prompt engineering not only improves the reliability of LLM agents but also mitigates issues like hallucinations and irrelevant responses.
-
-Here I would like to highlight Stanford’s DSPy framework, which is a more “scientific” approach to prompt engineering where a compiler optimizes prompts dynamically based on custom output metrics.
-
-## Memory
-
-Memory seems like one of the most intuitive features. While internet-scale pre-trained LLMs already accumulate a lot of generic knowledge about the world, the LLM does not have all the details needed for most agent use cases. It does not know the customer ID of the client it might be talking to, the history of the chat it had with another person three days ago, or the cultural guidelines for client communication of the company it represents. While there are more sophisticated approaches, such as memory editing and injection in the LLM via fine-tuning, a simple technique called retrieval-augmented generation (RAG) has been widely used in agents.
-
-In RAG, the knowledge to be injected into the LLM is chunked into smaller pieces, tokenized, embedded, indexed, and stored as vectors in a vector database. When the system is queried, the most relevant pieces of information in the vector database are identified via similarity search in the embedding space, transformed to natural language, and used to enrich the prompt fed into the model. Since a vector database functions similarly to other databases, developers can orchestrate the “memory” database as needed for the specific agent system (e.g., event-based data ingestion or retrieval of the entire database for every query).
-
-<ImageWithSubtitle
-    src="/december/image4.png"
-    alt="Schematic overview of RAG"
-    title={<span>Schematic overview of RAG <Reference id="4">[4]</Reference></span>}
+<Figure
+    id={4} 
+    src="/blogs/bullshit/bs--_gen.png"
+    alt="Example generation for BS-- prompt. The model recognizes the class does not exist and refuses to answer."
+    caption="Example generation for BS-- prompt. The model recognizes the class does not exist and refuses to answer."
 />
 
-## Reasoning
+In this example, we can clearly see the model is bullshitting the 'BarAgent' class for the BS+ prompt. Interestingly, the 'thinking' part is more or less coherent but in the 'final' part, the model invents a class signature. In the BS- case, the model correctly recalls the class signature from memory. In the BS-- case the model picks up on the fake search results and recognizes the class does not exist. Subsequently, the model refuses to answer.
 
-Reasoning is the reason we humans can learn and generalize from only a few examples. Hence, wanting agents to reason might seem trivial, yet the research community is still trying to figure out how to orchestrate models to imitate human reasoning. Even in chatbot use cases, where LLMs are only queried once, reasoning is more complicated than initially thought.
+To evaluate if the model is bullshitting for a given prompt, I decide to use an LLM to score each of the three generation splits on a bullshit score between 0 and 1, known as 'LLM-as-a-judge evaluation'. In our setting it is essential to use a model "more capable" than the model used for answering the initial query such that the judge does not fall for the 'bullshitting' of the model. Hence, I choose [ChatGPT 5 mini](https://platform.openai.com/docs/models/gpt-5-mini) as a judge. To be certain the evaluation is accurate, I (1) use the [OpenAI response API](https://platform.openai.com/docs/api-reference/responses) that allows to enable the 'web_search' tool for this model_id such that the model can search the web to evaluate the generations and (2) add the fake web search generated for example BS-- to the prompt. The system prompt for the judge can be found in <FigRef id={5} />. 
 
-Initial findings showed that LLM performance improved when using reasoning techniques like chain-of-thought (instructing the model to “think” step-by-step), self-reflection (re-evaluating wrong responses to lead to better conclusions), and multi-shot prompting (providing multiple examples in the prompt). These techniques eventually led to OpenAI’s GPT-4 outperforming other models by a large margin on reasoning tasks using reinforcement learning on reasoning steps (think MCTS). Yet, recent research from Apple showed that even for these “reasoning” models, the model seems to simply retrieve learned concepts during training rather than employing novel, human-like reasoning.
-
-This raises the question of how to enforce reasoning in agentic systems in which LLMs might be invoked tens to hundreds of times. The best answer to date is [ReAct](https://arxiv.org/pdf/2405.06682), where the model, after each action it takes, reflects on the new information received from the environment to adapt its reasoning trajectory accordingly. This can be implemented as simply as an intermediary step in which the LLM is prompted to reflect on the current plan to solve the task at hand given all previous and new information.
-
-<ImageWithSubtitle
-    src="/december/image5.png"
-    alt="Schematic overview of ReAct"
-    title={<span>Schematic overview of ReAct <Reference id="5">[5]</Reference></span>}
+<Figure
+    id={5} 
+    src="/blogs/bullshit/judge_prompt.png"
+    alt="System prompt for LLM-as-a-judge."
+    caption="System prompt for LLM-as-a-judge."
 />
 
-## Tool calling
+I find that across the 15 examples in the train and hold-out set the model exhibits the expected behaviour as can be observed via the LLM-as-a-judge scores in <FigRef id={6} /> and <FigRef id={7} />. For both data sets and all three prompts splits (thinking, final, and total from left to right in <FigRef id={6} /> and <FigRef id={7} />), the judge assigns an average bullshitting score of 0.85/1.0 for the BS+ prompt and only 0.367/0.283 for the BS- and 0.0/0.0 for the BS-- prompt for train and test set respectively. Assuming, the judge is well-suited to detect bullshitting (which we will look at next), this validates the experimental setting. Looking at the generation for the BS- prompt, one explanation for the non-zero bullshit score by the judge is that while the model recognizes that the method mentioned in the prompt exists, it often mixes up small details in the method signature, leading to a slightly elevated score. 
 
-Naturally, not everything in the real world is natural language. Humans, for instance, use a lot of tools (e.g., calculators, the internet, databases) daily to fulfill tasks more efficiently—so why wouldn’t agents? This capability allows agents to take actions in the outside world (e.g., web browsing and performing API calls).
-
-The research labs building foundational models recognized this early and started training their models to use tools. Today, most models accept schemas of tools as input (string representations of Python functions) and can execute these tools (including parameterization) during generation via special tokens introduced into the model vocabulary. Think of a tool as any kind of Python function, from those performing simple arithmetic operations to tools calling external APIs. Naturally, this brings with it the possibility for the model to take actions in the outside world. Every tool made accessible to an LLM-powered agent should be designed carefully under security considerations to prevent damage. Any unrestricted access to computer systems should occur in sandbox environments.
-
-A recent example of tool calling is Claude’s Computer Use, a set of tools allowing Claude to take over your computer and use the browser like a human to fulfill queries. This works through a set of tokens that call tools such as `move mouse to coord(X, Y)` and `left mouse click`.
-
-<ImageWithSubtitle
-    src="/december/image6.png"
-    alt="Anthropic demoing Claude's computer use"
-    title={<span>Anthropic demoing Claude's computer use <Reference id="6">[6]</Reference></span>}
+<Figure
+    id={6} 
+    src="/blogs/bullshit/judge_train.png"
+    alt="LLM-as-a-judge scores across prompts on train set. As expected, the model bullshits on BS+ and does not on BS--."
+    caption="LLM-as-a-judge scores across prompts on train set. As expected, the model bullshits on BS+ and does not on BS--."
 />
 
-## Structured output
-
-Structured outputs might not seem like an important feature for agents at first, but during my recent experiments with building agentic systems, I found them essential. Structured output, as provided by OpenAI’s GPT-4 models via the API, allows developers to instruct models on how to structure their output. Many applications require responses not only to be correct but also to adhere to predefined formats such as JSON, XML, or SQL queries. For example, when interacting with databases or APIs, generating valid and precise structured output is critical. Even if the model output is not directly used for an API or database, I found it essential to continuously structure the model’s output to monitor and guardrail the agent system to prevent malicious outputs.
-
-## Multi-agent
-
-Industrialization has taught us that cross-functional collaboration fosters productivity in almost all tasks. Considering LLMs’ ability to communicate through natural language and learn from mistakes or incorporate feedback (self-reflection), it only makes sense to explore the same paradigm in LLM agents. This has led to the deployment of multi-agent systems, where multiple agents collaborate to complete complex tasks.
-
-In multi-agent systems, similar to how teams work in companies, agents can specialize in distinct functions—for example, one focusing on reasoning, another on memory retrieval, and yet another on tool usage. By sharing information and delegating tasks, multi-agent systems can achieve higher efficiency and performance than a single agent alone. This allows tasks to be broken down into smaller, more manageable pieces, making them easier to solve for individual agents and enabling early detection of erroneous outputs via ‘Evaluator’ agents.
-
-Looking ahead, multi-agent systems are likely to become the dominant design choice for agents, particularly given the potential to allow agents fine-tuned or preference-aligned for different chores/domains to collaborate effectively.
-
-<ImageWithSubtitle
-    src="/december/image7.png"
-    alt="Examples of multi-agent systems"
-    title={<span>Examples of multi-agent systems <Reference id="7">[7]</Reference></span>}
+<Figure
+    id={7} 
+    src="/blogs/bullshit/judge_test.png"
+    alt="LLM-as-a-judge scores across prompts on test set. As expected, the model bullshits on BS+ and does not on BS--."
+    caption="LLM-as-a-judge scores across prompts on test set. As expected, the model bullshits on BS+ and does not on BS--."
 />
 
-## (Multi-)Modality and Embodied Agents
+Finally, as mentioned before, we have to make sure the "judge" is well-suited to detect bullshitting. To do so, I manually score all 15 examples across all three prompts for bullshitting. For simplicity reasons, I only score 0 for coherent, true generations and 1 for inconsistent, untrue 'bullshitting' generations. Across train and test set and all three generation splits I obtain a +0.74 Pearson correlation at a p-value of 2.668e-6 between the LLM-as-a-judge scores and my manual scores, showing the judge is well-aligned to the human (or at least my) understanding of 'bullshitting'.
 
-One of the main limitations of LLM agents was their capability to handle only natural language. With recent advancements in multi-modal AI, agents can now process and interact across multiple modalities—such as text, images, and speech. Multimodal LLMs can understand and generate responses across diverse input types, enabling applications like medical imaging analysis combined with textual patient histories or generating code snippets based on a hand-drawn wireframe.
+## Bullshit vector
 
-However, the biggest gap to bridge is the one between the digital and physical worlds. That is why most people expect embodied AI and embodied agents to become the next big thing in AI, enabling agents to physically interact with their environments. Prime examples of advances in this domain include Tesla’s Optimus robot, which uses LLM-driven intelligence to perform actions like serving beer, and Figure’s humanoid robot, which can follow instructions like cleaning dishes. These agents rely on advanced sensor integration and the real-time decision-making capabilities of the AI model powering the “agents,” enabling them to adapt and respond dynamically within physical spaces.
+Next, I want to find a bullshit vector in the activation vector space of the model that captures that the model is bullshitting. As shown in multiple papers on mechanistic interpretability (Elhage et al., 2021; Templeton et al., 2024), the residual stream is used by models to compress human-interpretable features in an activation vector space. To process this dense representation of human-interpretable features and eventually predict the next token, Transformer use inter/intra token position communication via attention- and MLP-layer respectively. While researchers in the field of mechanistic interpretability explored many techniques such as sparse Autoencoders and more recently cross-layer Transcoder (Ameisen et al., 2025) to project these dense representations back into a human-interpretable, sparse vector space (Rajamanoharan et al., 2024), other work has shown that the dense representations in the activation space of the residual stream can already be useful for interpreting model behaviour. For this it is necessary to extract an activation vector from the residual space that is believed to encode a desired behaviour. Chen et al., 2025, show that the average activation across token positions in the residual stream of a certain layer can represent such a vector.
 
-<ImageWithSubtitle
-    src="/december/image8.png"
-    alt="Embodied AI agent"
-    title={<span>Embodied AI agent <Reference id="8">[8]</Reference></span>}
+To compute candidate vectors for each layer, I store the activations in the residual stream of the underlying transformer for each token position and layer during inference with the three different user prompts using [nnsight](https://nnsight.net/). Note that gptoss-20b is using a KV-cache (Pope et al., 2022) for speed-ups during inference, meaning the attention product QK^T / sqrt(d_k) is only computed for the last token position and cached for all previous token positions. This also means auto-regressively generated tokens do not change attention in previous tokens which is why I decide to discard the activations for all token positions part of the prompt as the residual stream at these positions is not changing during generation. The remaining token positions are again split in the aforementioned generation splits 'thinking', 'final', and 'total' with the difference that I do not discard special tokens as it is known the corresponding token positions are used by models to save/communicate information used for decoding the next token. For each generation split I compute the average activation across all token positions and prompts on the train set and obtain a single d_model-shaped tensor. Given these tensors, I conduct two experiments to explore candidates of useful vectors for interpretability purposes.
+
+## Bullshit detection
+
+In this first experiment, we ask whether we can find an activation vector $$\vec{bs}_\text{det}$$ that helps us identify when a model is bullshitting. The underlying intuition is that there may exist a basis-like direction in the residual-stream activation space that encodes the model's uncertainty during generation. If such a vector $$\vec{bs}_\text{det}$$ exists, we can quantify uncertainty for a given generation by computing the cosine similarity
+<div style={{ textAlign: 'center', margin: '20px 0' }}>
+  $$cos(\vec{bs}_\text{det}, \vec{act}_L) = \frac{\vec{bs}_\text{det} \cdot \vec{act}_L}{||\vec{bs}_\text{det}|| * ||\vec{act}_L||}$$ 
+</div>
+between the bullshit-detection vector $$\vec{bs}_\text{det}$$ and the activation vector $$\vec{act}_L$$ extracted from the residual stream at layer L and averaged across all tokens for that generation. Intuitively, as illustrated in 2D activation space for simplicity in <FigRef id={8} />, the cosine similarity between the generation vector and the bullshit-detection vector should be higher for a bullshitting generation $$\vec{act}_{L,B}$$ than for a truthful generation $$\vec{act}_{L,T}$$, assuming $$\vec{act}_{BS+}$$ and $$\vec{act}_{BS-}$$ are representative of these two classes of generations.
+
+<Figure
+    id={8} 
+    src="/blogs/bullshit/det_mot.png"
+    alt="Illustrative figure why cosine similarity is a good detector for bullshitting."
+    caption="Illustrative figure why cosine similarity is a good detector for bullshitting."
 />
 
-# Orchestration
+ To get candidate bullshit-detection vectors I compute $$\vec{bs}_\text{det} = \vec{act}_{L,BS+} - \vec{act}_{L,BS-}$$ for each of the 24 layers of gptoss-20b on the train set. The reason I decided to use the BS- prompt here is that I want to distinguish a truthful generation (as in BS-) from a bullshitting generation (BS+) and not a generation in which the model refuses to answer (as in BS--). To select a suitable vector $$\vec{bs}_\text{det}$$ I compute the cosine similarity between the 24 candidates and the corresponding layer residual stream activations for the generations of the BS+ and BS- prompt across all generation splits averaged across train and test respectively. As can be seen in <FigRef id={9} /> and <FigRef id={10} />, the BS+ generation activations consistently achieve higher cosine similarity to the activation vector across all generation splits and train and test splits, validating the hypothesis that the $$\hat{bs}_{\text{det}}$$ activation vector could be used for identifying bullshitting. Across all three generation splits, again, the layer with index 14 scores the highest difference between cosine similarity for BS+ and BS- prompt (top3, top1, and top2 for thinking, final, and total split respectively) which is why I chose $$\vec{bs}_\text{det}$$ as the average activation vector captured in layer 14 across the train set.
 
-So far, we have explored the power of LLM agents and their main features. But the question of how to actually build LLM agents remains. As mentioned before, LLM agents represent a new frontier in ML engineering, which is why there are no widely adopted best practices yet. Nevertheless, several frameworks are available to help developers orchestrate LLM agent systems. Notable examples include [LangChain](https://python.langchain.com/docs/introduction/), [LlamaIndex](https://www.llamaindex.ai/), [Haystack](https://haystack.deepset.ai/), [AutoGen](https://microsoft.github.io/autogen/0.2/), and [OpenAI’s Swarm](https://github.com/openai/swarm).
-
-## AutoGen
-
-Here, I would like to give a quick overview of the aforementioned [AutoGen](https://microsoft.github.io/autogen/0.2/) framework released by Microsoft researchers, which I found personally most intuitive to use.
-
-The focus of this open-source framework is on conversable multi-agent systems. Each system is composed of customizable and conversable agents that can leverage LLM model APIs (for now, mainly OpenAI systems) for generation and tools for tool calling. These agents can receive, handle, and respond to all kinds of messages, enabling developers to program multi-agent conversations to break down complex workflows.
-
-For instance, a **Group Chat** design pattern enables multiple specialized agents to collaborate on a shared task by publishing and subscribing to a common message thread. Each agent is assigned a specific role and contributes sequentially under the guidance of a **Group Chat Manager**, which selects the next agent to “speak” based on predefined rules like round-robin or AI-based selection.
-
-For example, if we want to create a blog article including pictures, the workflow might involve defining agents like a writer, editor, illustrator, and user. The Group Chat Manager would then task the writer to draft content, the illustrator to generate appropriate images (using tools like DALL-E), and the editor to review the work. The process concludes when the user approves the final output.
-
-<ImageWithSubtitle
-    src="/december/image9.png"
-    alt="System architecture of blog-writing agent"
-    title={<span>System architecture of blog-writing agent <Reference id="9">[9]</Reference></span>}
+<Figure
+    id={9} 
+    src="/blogs/bullshit/det_train.png"
+    alt="Comparison of cosine similarity with bullshit vector for BS+ and BS- prompt per layer on train set."
+    caption="Comparison of cosine similarity with bullshit vector for BS+ and BS- prompt per layer on train set."
 />
 
-Beyond this basic architecture, AutoGen includes additional features such as asynchronous execution, sandbox environments for code execution, handoff logic for Swarm-like conversation patterns, and more.
+<Figure
+    id={10} 
+    src="/blogs/bullshit/det_test.png"
+    alt="Comparison of cosine similarity with bullshit vector for BS+ and BS- prompt per layer on test set."
+    caption="Comparison of cosine similarity with bullshit vector for BS+ and BS- prompt per layer on test set."
+/>
 
-# Outlook
+Finally, to verify if this vector is able to reliably classify if a generation is bullshitting, I compute the cosine similarity between $$\vec{bs}_\text{det}$$ and the average activation in the residual stream of layer 14 for all 5 BS+ and BS- prompts in the test set individually for the 'total' generation split. Given these 10 scores, I train a simple logistic regression to predict which prompts include bullshitting. I use 60% of the sample for training and 40% for testing. As can be seen in <FigRef id={11} />, the classifier is able to perfectly distinguish bullshitting and non-bullshitting samples. I obtained a perfect 1.0 ROCAUC score on the hold-out set. Again, I am well aware that 10 samples are not representative for an entire set of prompts but given the time constraints under which this work was fulfilled, there was no time to extend the experiment to more prompts.
 
-The future of agents looks incredibly promising. I believe agents are poised to automate many repetitive and simple tasks that humans currently perform in the near future. However, significant work remains to create reliable and secure applications with agents, much like traditional software development.
+<Figure
+    id={11} 
+    src="/blogs/bullshit/det_reg.png"
+    alt="Visualization classification of BS+ and BS- scores for 'total' generation."
+    caption="Visualization classification of BS+ and BS- scores for 'total' generation."
+/>
 
-A critical challenge is leveraging the “intelligence” of these systems while implementing guardrails to prevent malicious outputs. I believe hybrid systems that alternate between structured data for oversight and the latent space of LLMs for natural language understanding may be the key.
+## Bullshit prevention
 
-Evaluation also remains a major obstacle. Current benchmarks risk leaking into training data, while model-based evaluations often reinforce biases. Without robust and reliable evaluation metrics, deploying LLM agents in high-stakes applications will be impossible.
+In this second experiment, I want to extract a "bullshit steering vector" $$\vec{bs}_\text{steer}$$ that captures the deviation between a bullshitting generation and the expected denial of an answer when prompted with an untrue fact in the activation space of the model. Such a vector, if it exists, could be used to prevent the model from bullshitting. Intuitively, assuming all characteristics of all samples were reduced in the average activations vector in the residual stream of a given layer, this bullshit vector $$\vec{bs}_\text{steer}$$ would fulfill $$\vec{bs}_\text{steer} = \vec{act}_{BS+} - \vec{act}_{BS--}$$ (see <FigRef id={12} />). To test this hypothesis, following Turner et al., 2023, I compute $$\vec{bs}_\text{steer}$$ on my train set for all 24 layers and conduct a steering experiment. This steering experiment consists of steering the model with $$\vec{bs}_\text{steer}$$ such that for BS+ prompts, for which the model was previously bullshitting, it is not bullshitting anymore.
 
-I believe the next big thing in AI will be embodied agents. The path to autonomous humanoid robots, capable of performing physical tasks in the real world, is clear and only a question of time (i.e., how long it will take to gather enough simulation and supervised data to train a model capable of orchestrating all sensors reliably). When these agents integrate seamlessly into daily life, the transformative power of AI will become evident to the average citizen, leading to another big wave of adoption and investment.
+<Figure
+    id={12} 
+    src="/blogs/bullshit/steer_mot.png"
+    alt="Schematic diagram of how bullshit vector is computed in 2D."
+    caption="Schematic diagram of how bullshit vector is computed in 2D."
+/>
 
----
+Steering in this context means editing activations in the residual stream of a specific layer i at the token position that is being decoded towards a certain steering vector during the auto-regressive inference process. This can be written as 
+<div style={{ textAlign: 'center', margin: '20px 0' }}>
+  $$act_{L} = act_{L} + \alpha * \vec{bs}_\text{steer}$$.
+</div>
+Hyperparameter $$\alpha$$ is a scalar steering coefficient. If a bullshit-steering vector $$\vec{bs}_\text{steer}$$ exists such that the steered model significantly reduces bullshitting, one could claim having found an activation vector being partially responsible for the model bullshitting. This could be interpreted as a vector that lets the model reflect more about its confidence to answer the question correctly.
 
-# References
+To find $$\vec{bs}_\text{steer}$$ I run inference on all 15 BS+ train and test prompts for each of the 24 layers, steering the residual stream of a selected layer towards the previously computed NEGATIVE $$\vec{bs}_\text{steer}$$ candidate for that layer using [nnsight](https://nnsight.net/). Given the time, compute, and budget constraints of this setting, I only run this experiment for the 'total' generation activation candidates and a single steering coefficient $$\alpha=1.0$$ selected based on the results in (Chen et al, 2025). Again, I store the generations for the three generation splits 'thinking', 'final', and 'total' and let the judge model score each generation on the aforedescribed bullshit score scale. 
 
-<References>
-  <li id="cite-1"><a href="https://regressionist.github.io/2019-05-13-Reinforcement-Learning/">https://regressionist.github.io/2019-05-13-Reinforcement-Learning/</a></li>
-  <li id="cite-2"><a href="https://jalopnik.com/teslas-beer-serving-optimus-robot-was-controlled-by-a-h-1851670923">https://jalopnik.com/teslas-beer-serving-optimus-robot-was-controlled-by-a-h-1851670923</a></li>
-  <li id="cite-3"><a href="https://developer.nvidia.com/blog/introduction-to-llm-agents/">https://developer.nvidia.com/blog/introduction-to-llm-agents/</a></li>
-  <li id="cite-4"><a href="https://snorkel.ai/blog/which-is-better-retrieval-augmentation-rag-or-fine-tuning-both/">https://snorkel.ai/blog/which-is-better-retrieval-augmentation-rag-or-fine-tuning-both/</a></li>
-  <li id="cite-5"><a href="https://rdi.berkeley.edu/llm-agents-mooc/slides/llm-reasoning.pdf">https://rdi.berkeley.edu/llm-agents-mooc/slides/llm-reasoning.pdf</a></li>
-  <li id="cite-6"><a href="https://www.datacamp.com/blog/what-is-anthropic-computer-use">https://www.datacamp.com/blog/what-is-anthropic-computer-use</a></li>
-  <li id="cite-7"><a href="https://arxiv.org/abs/2308.08155">https://arxiv.org/abs/2308.08155</a></li>
-  <li id="cite-8"><a href="https://www.coolest-gadgets.com/ai-in-robotics-statistics/">https://www.coolest-gadgets.com/ai-in-robotics-statistics/</a></li>
-  <li id="cite-9"><a href="https://microsoft.github.io/autogen/dev/user-guide/core-user-guide/design-patterns/group-chat.html">https://microsoft.github.io/autogen/dev/user-guide/core-user-guide/design-patterns/group-chat.html</a></li>
-</References>
+<Figure
+    id={13} 
+    src="/blogs/bullshit/steer_eval.png"
+    alt="Avg. bullshitting score for BS+ prompt per layer and generation split for steered model with non-steered baseline."
+    caption="Avg. bullshitting score for BS+ prompt per layer and generation split for steered model with non-steered baseline."
+/>
+
+Looking at <FigRef id={13} />, we can clearly see that bullshiting vectors for layers 14-16 are candidates for $$\vec{bs}_\text{steer}$$ as we observe a significant drop in "bullshitting" across all generation splits when steered with the corresponding activation vector compared to the previously computed baseline for the BS+ prompt. These results consisted across the train split on which the activation vectors were computed and the hold-out, test set. This can be exemplified by looking at the steered generation for the example discussed in <FigRef id={2} />, as shown in <FigRef id={14} />.
+
+<Figure
+    id={14} 
+    src="/blogs/bullshit/steer_gen.png"
+    alt="Comparison of non-steered and steered (Layer 14) generation for an example BS+ prompt."
+    caption="Comparison of non-steered and steered (Layer 14) generation for an example BS+ prompt."
+/>
+
+All of a sudden, for the same prompt, the model is much more critical of its inability to recall the existence of the non-existing class 'BarAgent' in Langchain. It reflects: "I don't recall" and "Possibly a type". Interestingly, the model also feels much less of a pressure to answer. While the non-steered 'thinking' generation contains imperative paragraphs like 'Need to confirm' and 'We need to provide the signature', the steered generation solely reflects 'We need to check'. Eventually, instead of guessing BarAgent is some wrapper around BaseAgent (like it does in the unsteered generation), the steered model recognizes that it does not know the 'BarAgent' class which is the expected behaviour! 
+
+# Conclusion
+
+In this proof-of-concept, I showed that a simple bullshit activation vector in the residual stream can reliably separate bullshitting from truthful generations on my small test set, and that a corresponding bullshit-steering vector can reduce bullshitting by over 50% according to an external LLM judge. This suggests that internal activation signals could be surfaced in tools as lightweight uncertainty indicators or guardrails—for example, to trigger warnings, force tool use, or route generations through safer decoding modes when the model "feels" unsure. However, these results are based on a narrow task and tiny dataset, so they need to be stress-tested on larger, more diverse prompts, models, and hallucination types. As future work, I would like to combine this approach with circuit-level analysis and sparse autoencoders to pinpoint which features and pathways actually detect hallucinations, enabling sharper signals and more targeted interventions. This could give insight into the underlying reasons of hallucinations.

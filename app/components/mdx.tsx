@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMDXComponent } from "next-contentlayer/hooks";
 import { Reference, References } from 'app/components/reference';
+import FigRef from 'app/components/figref';
 
 function clsx(...args: any) {
 	return args.filter(Boolean).join(" ");
@@ -23,6 +24,21 @@ const ImageWithSubtitle = ({ src, alt, title, className, ...props }) => (
             </p>
         )}
     </div>
+);
+
+// Figure component with automatic numbering and anchor for referencing
+const Figure = ({ id, src, alt, caption, className, ...props }) => (
+    <figure id={`fig-${id}`} className="my-8 flex flex-col items-center scroll-mt-20">
+        <img
+            src={src}
+            alt={alt}
+            className={clsx("rounded-md border border-zinc-200 max-w-full", className)}
+            {...props}
+        />
+        <figcaption className="mt-3 text-center text-sm text-zinc-600">
+            <span className="font-semibold">Figure {id}:</span> {caption}
+        </figcaption>
+    </figure>
 );
 
 const components = {
@@ -177,6 +193,8 @@ const components = {
 	Reference,
 	References,
 	ImageWithSubtitle,
+	Figure,
+	FigRef,
 };
 
 interface MdxProps {
