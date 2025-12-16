@@ -1,0 +1,278 @@
+---
+title: "Why should gLMs even be LMs?"
+description: "After their success in NLP, generative pre-trained Transformers are now being applied to genetic sequences. But given the fundamental differences between natural language and DNA, does this approach really make sense?"
+date: "2025-12-08"
+published: true
+picture: "/blogs/glms/background.png"
+---
+
+# Motivation
+
+In late 2024, OpenAI co-founder [Greg Brockman](https://en.wikipedia.org/wiki/Greg_Brockman) joined the Arc Institute, a non-profit biomedical research lab co-founded by Berkeley Prof (see <FigRef id={1} /> as per [X](https://x.com/gdb/status/1864052838256808339?s=20)). Patrick Hsu, Stanford Prof. Jonathan Konermann, and Stripe CEO Patrick Collison, as part of a sabbatical. Only a few months later, [Evo 2](https://arcinstitute.org/news/evo2), a genomic language model (gLM) trained on DNA from more than 100,000 species, was released with Brockman as a contributor (Brixi et al., 2025). Despite minor architectural adaptations required to handle the extreme sequence lengths of DNA sequences (Ku et al., 2025), Evo 2 adheres remarkably closely to the design principles of large language models. This reflects an explicit modeling hypothesis articulated by Brockman, who argues on [the Latent Space podcast](https://youtu.be/35ZWesLrv5A) that modeling genetics is "exactly the same [as language]" just with a simpler vocabulary ("4 letters is all you got").
+
+<Figure
+    id={1} 
+    src="/blogs/glms/greg_at_arc.png"
+    alt="Greg Brockman with the Arc Institute team during his sabbatical in late 2024 as per X."
+    caption="Greg Brockman with the Arc Institute team during his sabbatical in late 2024."
+/>
+
+Given the recent trajectory of machine learning, the hypothesis that modeling DNA as a language is indeed enticing. After all transformer-based language models have repeatedly demonstrated that a single, largely domain-agnostic architecture trained via self-supervised next-token prediction on massive corpora can recover abstract concepts from symbolic sequences. The same modeling paradigm that learns syntax, semantics, and even world knowledge from raw text has proven effective across modalities, from source code to images and multimodal data. Viewed through this lens, DNA appears to fit naturally into the same framework: a long sequence of discrete symbols, shaped by evolutionary constraints, whose meaning emerges from context. If Transformers can infer the latent rules of human language directly from data, it seems intuitive they might also uncover the implicit grammar governing nature.
+
+Yet, mounting evidence from recent advances in computational biology suggests that this analogy should be treated with caution. While many NLP-inspired genomic models continue to expend vast computational resources in the hope that scaling laws analogous to those in language will eventually materialize, a parallel wave of benchmark-setting models has emerged by explicitly incorporating biological expertise. AlphaFold (Jumper et al., 2021) revolutionized protein structure prediction not through language-style next-token objectives, but by directly modeling evolutionary constraints, three-dimensional geometry, and physical priors governing protein folding. GPN-Star (Ye et al., 2025) achieves state-of-the-art performance in functional constraint prediction by embedding phylogenetic context directly into both data selection and architectural design. Similarly, AlphaGenome (Avsec et al., 2025) demonstrates leading performance in regulatory activity prediction by integrating biologically grounded representations of sequence function rather than relying solely on generic sequence modeling. Taken together, these examples suggest that biological meaning is not fully recoverable from sequence statistics alone, and that progress increasingly depends on models that reflect the mechanisms by which genetic information is interpreted.
+
+Motivated by these observations, this blog examines the language analogy in genomics more closely to assess whether it truly holds up. Will the statistical genetics community encounter its own version of [the Bitter Lesson](http://www.incompleteideas.net/IncIdeas/BitterLesson.html), in which continued progress ultimately comes from scaling general-purpose models trained on raw data? Or will advances instead be driven through the incorporation of inductive biases that reflect biological mechanisms? In the following, I begin by (i) comparing DNA and natural language, before (ii) exploring how their fundamental differences can be translated into concrete design principles, with a focus on modeling objective, data selection, architecture, and training pipelines. The goal is not to dismiss genomic language models outright, but to clarify whether progress in genomics is more likely to arise from treating DNA as just another language—or from embracing the ways in which it fundamentally is not.
+
+# Similarities and Differences Between Genomic and Natural Language
+
+Before assessing whether the language analogy in genomics ultimately holds, it is useful to clarify both where it applies and where it begins to strain. Under a common definition of language as a [structured system consisting of grammar and vocabulary](https://en.wikipedia.org/wiki/Language), DNA shares several surface-level similarities with natural language. It uses a finite alphabet, follows strict structural rules, and conveys information in a highly context-dependent manner. These parallels help explain why language models appear, at least initially, to be a natural fit for genomic data. At the same time, fundamental qualitative differences challenge this analogy and raise questions about whether the assumptions that underpin modern language models transfer cleanly to biology.
+
+<Figure
+    id={2} 
+    src="/blogs/glms/talk_dna.png"
+    alt="Is DNA really a language?"
+    caption="Is DNA really a language?"
+/>
+
+> Note: In this section, I focus on DNA (as opposed to RNA or proteins) and Arabic languages as symbolic systems for genomic and natural language respectively.
+
+## Similarities
+
+### Symbolic information compression
+
+At a superficial level, both natural language and DNA are sequences of discrete symbols compressing higher-order information. Natural language uses letters or words; DNA uses four nucleotides (A, C, G, T). In both cases, meaning is not contained in individual symbols but emerges from their arrangement in context.
+
+### Hierarchical structure
+
+Both natural language and DNA exhibit strong hierarchical organization. In many languages, characters combine to form words, words form phrases and sentences, and sentences often combine into logical paragraphs. Each level introduces new structure and constraints that shape interpretation. DNA exhibits a similarly layered organization, governed by the [dogma of life](https://en.wikipedia.org/wiki/Central_dogma_of_molecular_biology). DNA is transcribed into mRNA, RNA nucleotides form codons and are translated into amino acids, amino acids fold into 3-dimensional proteins, and proteins interact within complex regulatory and metabolic networks that orchestrate the organism (<FigRef id={3} />).
+
+<Figure
+    id={3} 
+    src="/blogs/glms/dogma_crick.png"
+    alt="Central Dogma of life as depicted by Francis Crick in 1958"
+    caption="Central Dogma of life as depicted by Francis Crick in 1958"
+/>
+
+### Structural rules
+
+Both systems are governed by structural constraints that limit the space of viable sequences. In natural language, there are constraints at the character and at the word level. At the character level, a language’s vocabulary defines which combinations of characters are considered valid words. For example, the Oxford English Dictionary lists on the order of 170,000 distinct English words. Given that the average English word is approximately 4.7 characters long, this means that only a about 3.2% of all possible character combinations correspond to usable words. Word-level grammatical rules further constrain language by specifying which sequences of words are syntactically valid. At a minimum, sentences must contain a subject and a verb, and more complex constructions impose additional ordering and agreement constraints. Together, vocabulary and grammar sharply reduce the combinatorial space of meaningful utterances.
+
+For DNA, although the constraints are less explicit and far less completely understood than in natural languages, there nonetheless exists a set of biological rules and structural regularities that restrict which nucleotide sequences are viable, stable, or functional. Some example include: 
+- At the chromosome level, certain regions are characterized by highly repetitive sequence motifs that serve essential structural roles. For example, telomeres in vertebrates consist of tandem repeats of the hexameric sequence TTAGGG, which protect chromosome ends from degradation, fusion, and erroneous DNA repair. Similarly, human centromeres are composed primarily of alpha-satellite DNA, consisting of ~171 base pair monomeric units arranged into large higher-order repeat arrays that can span hundreds of kilobases to megabases. While the exact nucleotide sequence of these repeats is not strictly conserved across chromosomes or individuals, their repetitive organization and ability to support centromere-specific chromatin are critical for chromosome segregation, stability, and faithful replication. 
+- At the translation level, DNA sequences are constrained by the genetic code, in which triplets of nucleotides (codons) map deterministically to amino acids. This mapping imposes strong combinatorial restrictions: functional protein-coding sequences must maintain an open reading frame, begin with specific start codons (typically ATG), and terminate with one of a small set of stop codons. 
+- At the transcriptional level, regulatory elements impose additional sequence-level constraints that govern when, where, and how genes are expressed. Promoters, enhancers, silencers, splice donor and acceptor sites, and untranslated regions rely on recognizable sequence motifs and structural properties to interact with transcription factors, RNA polymerase, and the splicing machinery. Although the regulatory “code” is highly context-dependent and remains only partially understood, certain recurring patterns, such as conserved splicing signals including the 5′ donor site motif G-G-[cut]-G-U-R-A-G-U, a branchpoint sequence Y-U-R-A-C located approximately 20 to 50 nucleotides upstream of the 3′ acceptor site, and the 3′ acceptor motif Y-rich-N-C-A-G-[cut]-G, serve as empirically established heuristics that reflect underlying biochemical requirements. It is further known that variation in the precise sequence of intronic splicing elements and in the distance between the branchpoint and the 3′ acceptor site can influence splice-site selection.
+
+### Context dependence 
+
+<Figure
+    id={4} 
+    src="/blogs/glms/context.png"
+    alt="Examples of context in natural (left) and genomic (right) language"
+    caption="Examples of context in natural (left) and genomic (right) language"
+/>
+
+In natural language, meaning is inherently contextual. Individual characters, and often even individual words, carry little meaning in isolation and only acquire semantic content through their relationship to surrounding tokens. For example, the word "bank" is semantically ambiguous on its own. Its interpretation as a financial institution or the edge of a river depends on the broader discourse context. At the sentence level, grammatical structure constraints interpretation, but meaning can further shift depending on preceding statements, speaker intent, or situational context.
+
+DNA too is highly contextual. A single nucleotide substitution can be functionally neutral in one genomic location, such as a synonymous codon in a non-essential gene, yet catastrophic in another, for example when it disrupts a splice donor site, alters a transcription factor binding motif, or introduces a premature stop codon (nonsense mutation). Even larger sequence elements, including entire genes, may have no observable phenotypic effect if they are not expressed in a given tissue or developmental stage. Expression itself is not a property of a gene’s coding sequence but is instead governed by its regulatory context.
+- At short genomic ranges, local sequence context plays a decisive role in gene regulation. Promoters, splice sites, untranslated regions, and proximal transcription factor binding sites depend on specific sequence motifs and spacing constraints that determine whether transcription is initiated, RNA is correctly processed, and translation proceeds efficiently. For example, a single nucleotide substitution at a canonical splice donor or acceptor site can abolish proper splicing, activate cryptic splice sites, or cause exon skipping, even though the underlying protein-coding sequence remains unchanged. A well-studied case occurs in the β-globin gene (HBB), where point mutations at the 5′ splice donor site of intron 1 disrupt the conserved motif G-G-[cut]-G-U-R-A-G-U, leading to aberrant splicing of the β-globin transcript (Spritz et al., 1981). These mutations result in reduced or absent production of functional β-globin protein and cause β-thalassemia, a severe blood disorder characterized by impaired hemoglobin synthesis.
+- At longer genomic ranges, regulation is mediated by distal elements such as enhancers, silencers, and insulators that may be located tens or hundreds of kilobases, or even megabases, away from the genes they regulate. Through chromatin looping and higher-order genome organization, these distal elements physically interact with promoters to modulate transcription in a cell-type- and time-specific manner. A canonical example is the regulation of the Sonic hedgehog (SHH) gene during vertebrate limb development, where expression in the developing limb bud is controlled by a distal enhancer known as the ZRS, located approximately one megabase away from the SHH coding region. Mutations in this enhancer do not alter the SHH protein sequence but specifically disrupt limb expression, leading to developmental abnormalities such as polydactyly (Lettice et al., 2003). 
+
+## Differences
+
+### Evolution
+
+DNA and natural language both evolved over time, but the nature and timescale of their evolution differ profoundly. DNA evolved over billions of years under natural selection, such that random mutations conferring even small fitness advantages are more likely to persist and spread through populations. Over evolutionary timescales, this process has produced highly efficient and functional sequences that are shared across species and strongly conserved (see <FigRef id={6} />). As a result, mammals retain large portions of homologous DNA. Phylogenetic whole-genome alignments reveal approximately 98–99% sequence identity between humans and chimpanzees (The Chimpanzee Sequencing and Analysis Consortium, 2005), including essential genes such as the Hox gene family, which governs body plan development.
+
+<Figure
+    id={5} 
+    src="/blogs/glms/polygenic_tree.png"
+    alt="Phylogenetic tree of vertebrates showing major taxa and the evolutionary emergence of key traits such as bony skeleton, four limbs, amniotic egg, hair, and skull openings."
+    caption="Phylogenetic tree of vertebrates showing major taxa and the evolutionary emergence of key traits such as bony skeleton, four limbs, amniotic egg, hair, and skull openings."
+/>
+
+Natural language, by contrast, is shaped primarily by cultural transmission and social utility. While languages do evolve, the timescale is comparatively short, and changes are often incremental. Moreover, linguistic evolution is not directly constrained by physical viability in the same way biological evolution is. As a result, the statistical structure of DNA reflects survival under physical and biochemical laws, whereas natural language reflects cultural norms and human cognition.
+
+### Sequence properties
+
+Natural language is intrinsically directional. Text is produced and interpreted sequentially, typically from left to right, with meaning unfolding along a single linear axis. DNA, by contrast, is not necessarily interpreted in a strictly linear, one-directional manner. Transcription is influenced by regulatory elements acting both upstream and downstream of a gene. Furthermore, DNA exists as a double-stranded molecule, with biologically relevant information encoded on both strands and transcription potentially occurring in either direction depending on cellular context.
+
+Genomic sequences also differ from natural language in scale. The human genome contains approximately three billion nucleotides per strand, vastly exceeding the context lengths encountered in natural language processing. While many sequence-level interactions are local, biologically important effects such as chromatin structure often span large genomic distances. Such long-range interactions are difficult to capture with models that rely on purely sequential representations.
+
+### Entropy
+
+We have seen that both natural language and DNA compress information into sequences of discrete symbols. However, the way information is distributed within those sequences differs fundamentally. Natural language is highly regularized: grammar, vocabulary, and semantics strongly constrain which symbol combinations are valid and meaningful (see the paragraph on structural rules). This intentional structure sharply limits variability, introduces substantial redundancy, and gives rise to highly repeatable n-gram statistics at both the character and word level. Genomic sequences, by contrast, exhibit far less such regularization. A key reason is that large portions of DNA are functionally neutral or only weakly constrained with respect to any particular biological role. Only about 1–1.5% of the human genome codes for proteins, and only a small fraction of genomic positions show substantial variation across populations. Because many nucleotide positions have little or no effect on organismal fitness, DNA tolerates a wide range of symbol combinations. As a result, sequence-level statistics are much closer to those of a random process than in natural language.
+
+This difference is reflected in their entropy. English text has an estimated Shannon entropy of approximately 4.7 bits per character (including whitespace) and about 2.6 bits per word, values that reflect strong syntactic and semantic constraints. Human DNA, by contrast, exhibits an entropy of roughly 1.6–1.8 bits per nucleotide (excluding the Y chromosome), close to the maximum possible entropy of 2 bits for a four-letter alphabet (Liu et al., 2008). In other words, while DNA carries less information per symbol than language in absolute terms, it does so with far less structural redundancy. An experiment conducted by Liu et al. (2008) (<FigRef id={6} />) on normalized block entropy as a function of block length for different sequences underline this difference in entropy between natural and genomic language. Yeast DNA (○, alphabet size 4) shows near-random behavior with steadily increasing entropy, while human language (△, Alice in Wonderland, alphabet size 27) and computer code (*, FORTRAN, alphabet size 90) exhibit much lower entropy, reflecting strong structural constraints and redundancy. Music (□, Beethoven Sonata No. 32, alphabet size 3) lies between language and DNA, indicating greater irregularity than language but more structure than random sequences.
+
+<Figure
+    id={6} 
+    src="/blogs/glms/norm_entr.png"
+    alt="Normalized block entropy as a function of block length for sequences drawn from different domains, with entropy computed using a logarithm base equal to the alphabet size (Liu et al., 2008)."
+    caption="Normalized block entropy as a function of block length for sequences drawn from different domains, with entropy computed using a logarithm base equal to the alphabet size (Liu et al., 2008)."
+/>
+
+It is worth noting that while genomic variation is sparse, it is often highly consequential, accounting for a large fraction of phenotypic variation across populations, as demonstrated by heritability studies (Wainschtein, 2025). This stands in sharp contrast to natural language, where n-gram variation is constrained by grammar and vocabulary, but higher-order structures are comparatively unconstrained and rarely repeat in the same form.
+
+### Interpretation and stochasticity
+
+Unlike natural language, where meaning can often be derived directly from the symbol sequence itself, genomic interpretation is inseparable from the biological processes that translate DNA into observable outcomes. These processes are governed by physical and chemical laws, and are therefore inherently stochastic. Understanding the genetic code consequently requires modeling not only sequence patterns, but also the biological machinery of the central dogma that gives those sequences meaning, as well as the non-linear interactions and confounding factors that shape phenotypic outcomes. In genomics, meaning does not reside in the sequence alone, but emerges through context-aware interpretation, interaction, and stochasticity. As discussed before, whether a DNA sequence "matters" is inherently conditional on how it is interpreted by the central dogma of molecular biology. A variant’s impact depends on whether the sequence is expressed and how strongly it is expressed. A regulatory mutation may be entirely benign in most tissues yet pathogenic in a specific cell type, or only under physiological stress.
+
+Beyond additive genetic effects, phenotypic outcomes are neither purely linear nor fully determined by genotype alone. Genetic variants often interact in non-additive ways through epistasis, where the effect of one variant depends on the presence of others, leading to amplification, suppression, or qualitative changes in outcome. A classic example of epistasis is coat color determination in dogs, which involves interactions between the MC1R and TYRP1 genes (see <FigRef id={7} />). While TYRP1 controls whether eumelanin is black or brown, MC1R determines whether eumelanin is produced at all. Dogs homozygous recessive at MC1R (ee) cannot produce eumelanin and therefore appear yellow regardless of their TYRP1 genotype. In this case, variation at MC1R masks the phenotypic effect of TYRP1, illustrating how the effect of one gene can depend entirely on another. Gene–environment interactions further complicate interpretation, as environmental exposures can modulate or even reverse genetic effects. For instance, variants in the FTO locus are associated with increased obesity risk, yet their phenotypic impact is dependent on environmental factors such as physical activity and dietary factors (Frayling et al., 2008).
+
+<Figure
+    id={7} 
+    src="/blogs/glms/dogs.png"
+    alt="Combinations of TYRP1 (B) and MC1R (E) genotypes underlying the three recognized Labrador Retriever coat colors."
+    caption="Combinations of TYRP1 (B) and MC1R (E) genotypes underlying the three recognized Labrador Retriever coat colors."
+/>
+
+Finally, stochasticity adds yet another layer of complexity to the sequence-to-function relationship. Gene expression is inherently probabilistic, driven by random molecular collisions, bursty transcription, and fluctuating availability of transcription factors, such that even genetically identical cells can exhibit large differences in expression levels. This randomness is amplified by dynamic DNA binding of transcription factor assemblies, where regulatory complexes continuously form and dissolve. Additional stochastic processes operate at higher organizational levels, including mitochondrial partitioning during cell division and random X-chromosome inactivation in female mammals, which creates mosaics of gene expression within a single organism. Together, these sources of stochasticity ensure that genotype does not map deterministically to phenotype, but instead gives rise to distributions of possible outcomes.
+
+# Genomic-informed adaptations to the traditional Large Language Model pipeline 
+
+If genomic language models were truly "just language models with a smaller alphabet," then one would expect the standard LLM recipe—scale data, scale parameters, predict the next token—to suffice. However, recently, many of the benchmark-setting models in functional constraint and activity prediction (Jumper et al., 2021; Avsec et al., 2025; Ye et al., 2025) deviate from this paradigm. Rather than treating DNA as just another language, they incorporate biological domain expertise into objective, data selection, architectural design, and training pipeline.
+
+## Objective
+
+One of the most fundamental differences between natural language modeling and genomic sequence modeling lies in the objective. In NLP, the LLM paradigm has shown: by learning a joint probability distribution $$p(x_1, \dots, x_n)$$ over tokens $$\{x_i\}_{i \in \{1, \dots, n\}}$$ these models capture syntax, semantics, and discourse structure implicitly. The working hypothesis is that sufficiently accurate next-token prediction will internalize the structure of language well enough to support coherent conditional generation through marginalization over context to perform downstream tasks.
+
+In genomics, it is far less clear what the analogous objective should be. As discussed earlier, DNA is not interpreted directly at the sequence level, but through multiple layers of the central dogma, each introducing its own dependencies, constraints, and sources of uncertainty. Moreover, the combination of extremely long sequences and sparse but biologically consequential mutations makes nucleotide-level statistics a poor target for learning a single joint distribution.
+
+> This raises a foundational question: **What are we trying to predict?**
+
+1. **Functional constraint prediction** aims to identify which variants are tolerated by evolution and which are deleterious. In this setting, likelihood under a model is often interpreted as a proxy for evolutionary fitness, and predictions are used to prioritize pathogenic variants or infer loss- and gain-of-function effects at the variant level. <br />
+*Examples:* GPN-Star, NucleotideTransformer.
+	
+2. **Activity prediction** focuses on predicting experimentally measurable molecular outcomes, such as chromatin accessibility, transcription factor binding, splicing patterns, gene expression, or chromatin contacts. These objectives explicitly shift attention away from sequence plausibility toward sequence effect, grounding learning in functional assays rather than evolutionary statistics alone. <br />
+*Examples:* Enformer, Borzoi, AlphaGenome, SpliceAI, DeltaSplice, ChromBPNet, ProCapNet, Orca.
+
+3. **Structure prediction** seeks to infer three-dimensional conformations or interaction interfaces, most prominently in proteins. Here, the goal is not to model sequence statistics at all, but to recover the physical structures that determine molecular function. <br />
+*Examples:* AlphaFold, ESM.
+
+4. **Autoregressive generation** objectives mirror the classical language modeling approach: learning a joint distribution over sequences by predicting the next token. In genomics, this objective is most appropriate when the goal is to generate new biological sequences rather than to interpret their functional consequences. Autoregressive generative models enable practical applications in genome engineering and synthetic biology, including CRISPR guide design and the generation of novel therapeutic proteins or peptides for drug discovery. <br />
+*Examples:* ProGen, Evo.
+
+Beyond these task-specific objectives lies the more ambitious goal of representation learning: unsupervised-learning leading to something like a genomic "world model." The aim here is not to optimize for a single biological endpoint, but to learn latent representations that capture the underlying structure of genomic systems and can be applied or adapted (transfer learning) to diverse downstream tasks. Interestingly, some large-scale functional constraint models already move partway in this direction. Functional constraint prediction models such as GPN-Star and Evo 2 do not explicitly optimize a loss on functional constraint or fitness, yet their cross-entropy training objective over sequence implicitly encodes evolutionary pressures through observed variation across species.
+
+## Data
+
+### Data modalities are objective-dependent
+
+In natural language, the character sequence alone contains all information necessary to interpret a text. In genomics, by contrast, biological meaning emerges only after sequence is interpreted through the layers of the central dogma, and different tasks depend on different layers. As a result, the appropriate data modality is inherently objective-dependent.
+
+For example, protein structure prediction naturally operates on amino acid sequences, as demonstrated by AlphaFold, where the goal is to infer three-dimensional structure rather than nucleotide statistics. In contrast, models for splicing prediction such as SpliceAI and DeltaSplice depend on RNA-level processing, motivating models that operate directly on nucleotide sequence in a regulatory context.
+
+###  How to use phylogenetic context?
+
+As discussed earlier, evolutionary conservation is one of the strongest indicators of biological importance. Sequences that are essential for organismal fitness tend to be preserved across species, while non-functional regions accumulate mutations more freely. Phylogeny therefore provides a natural and information-rich supervision signal, particularly for functional constraint prediction, allowing models to distinguish functional constraint from neutral variation.
+
+While many genomic models incorporate DNA from multiple species, the best way to use phylogenetic information, while task-specific, is unclear. Some models, such as AlphaGenome and Borzoi, largely focus on a small number of closely related species, typically human and mouse, and rely on experimentally measured functional readouts to define biological relevance. Other approaches, including Evo2, scale to thousands of species by treating genomes as independent sequences, simply concatenating DNA from different species as texts from different sources would be concatenated to form the training corpus in NLP.
+
+In contrast, models such as GPN-Star and AlphaFold leverage multiple sequence alignments (see illustration in <FigRef id={8} />) to make phylogenetic relationships explicit. By aligning homologous sequences across species, these models directly expose conserved and co-evolving positions, allowing them to recover functional and structural constraints with impressive accuracy at a fraction of the computational cost required by large-scale sequence-only models. It is worth noting that the limited use of broad phylogenetic diversity in many current models may partly due to the scarcity of high-quality genome assemblies and functional annotations for large parts of the tree of life, particularly for plants. As sequencing technologies and annotation efforts expand to cover these gaps, incorporating richer phylogenetic data will likely become increasingly important for learning generalizable biological representations.
+
+<Figure
+    id={8} 
+    src="/blogs/glms/wga.png"
+    alt="Illustrative figure showing whole genome alignment window between multiple species."
+    caption="Illustrative figure showing whole genome alignment window between multiple species."
+/>
+
+### Bias for mutation and repetition
+
+A core assumption in NLP is that token frequencies reflect meaning and usage. In genomes, by contrast, nucleotide frequencies reflect mutation processes, evolutionary history, and extensive sequence repetition, all of which vary dramatically across genomic regions and species. The genome is therefore not an i.i.d. sequence.
+
+Training directly on raw DNA without accounting for these biases therefore risks learning the statistics of mutation and repetition rather than the constraints of biological function. This issue is particularly acute for models trained purely on sequence likelihood, where repetitive and low-complexity regions can dominate the loss despite contributing little functional signal. As a result, many genomic language models explicitly account for repetition and mutation-rate heterogeneity during training. Models such as GPN-Star and Evo2 incorporate strategies to reduce the influence of repetitive sequence and overrepresented contexts, for example through downweighting the loss in repetitive regions, filtering training data for conserved regions, and applying strand-aware or reverse-complement augmentations to encode biological symmetries.
+
+## Architecture
+
+### Masked vs. causal learning
+
+In NLP, autoregressive modeling is a natural architectural choice because language is produced and consumed sequentially. Text unfolds in a privileged direction, and causal dependencies align closely with how language is generated. In genomics, this assumption breaks down. Regulatory interpretation depends on context on both sides of a locus, and strand orientation is not intrinsically privileged in the same way as text direction. As a result, purely causal objectives are often misaligned with how biological meaning is encoded.
+
+Today, two language modeling approaches prevail in genomic contexts. Autoregressive models, such as Evo and ProGen, are primarily used for generative tasks, where the goal is to sample new, biologically plausible sequences. In contrast, masked or bidirectional models are more commonly used for representation learning and prediction, where full contextual information is required. Examples include GPN-Star, ESM, and NucleotideTransformer, which leverage bidirectional context to capture evolutionary or functional signals rather than sequence plausibility.
+
+### How to combine long-range context and scalability?
+
+Genomic function often depends on interactions spanning tens to hundreds of kilobases, far exceeding the context lengths typical in NLP. At the same time, many biologically relevant signals are highly local, such as transcription factor binding motifs or splice sites. This creates an inherent tension between local resolution and global context.
+
+To address this, genomic architectures typically rely on either convolutions, which efficiently model local patterns and hierarchical features, or attention-based mechanisms, which can capture long-range dependencies but are computationally more expensive, with memory and compute requirements scaling quadratically with sequence length. Convolutional models are generally more lightweight in terms of parameters and compute, whereas attention mechanisms are more expressive but significantly more costly. This trade-off explains why many large-scale genomic models adopt transformer-based architectures, including AlphaGenome, Evo, NucleotideTransformer, and GPN-Star.
+
+In contrast, many activity prediction models rely primarily on convolutional architectures. For these tasks, it is often sufficient to operate on binned representations of base pairs, trading single–base-pair resolution for tractable long-range context. Models such as SpliceAI, DeltaSplice, ChromBPNet, and ProCapNet successfully leverage this approach, capturing relevant regulatory signals while remaining computationally efficient, even at context lengths at the megabase scale.
+
+More broadly, the quadratic scaling of attention with sequence length has motivated exploration beyond standard transformer architectures. This includes hybrid convolution–attention models, state-space models, and linear-attention mechanisms. For example, Evo2 employs long-range convolutions through its StripedHyena2 architecture to scale context efficiently. At the other extreme, models such as GPN-Star achieve strong performance in variant effect prediction with context windows as small as 256 base pairs, raising an important open question: how much context is actually necessary for different genomic tasks?
+
+### Hierarchical architecture
+
+Genomic sequence interpretation is inherently hierarchical, reflecting the layered organization imposed by the central dogma and multiscale biological processes more broadly. As a result, many genomic models adopt explicitly hierarchical architectures, often inspired by U-Net–style designs (see example in <FigRef id={9} />). Models such as Enformer, Borzoi, and AlphaGenome process sequence information at multiple resolutions, combining fine-grained local features with increasingly coarse global representations.
+
+<Figure
+    id={9} 
+    src="/blogs/glms/borzoi_arch.png"
+    alt="U-Net inspired architecture of Borzoi comprising stacked convolutional and downsampling layers, a self-attention block with relative positional encoding at 128 bp resolution (as in Enformer), and a upsampling pathway that produces outputs at 32 bp resolution."
+    caption="U-Net inspired architecture of Borzoi comprising stacked convolutional and downsampling layers, a self-attention block with relative positional encoding at 128 bp resolution (as in Enformer), and a upsampling pathway that produces outputs at 32 bp resolution."
+/>
+
+A key component of these architectures is the use of skip connections between encoder and decoder layers, which allow representations at multiple resolutions to be integrated into the final output. This enables local sequence features, such as motifs or splice sites, to directly influence higher-level predictions, while broader contextual signals, such as long-range genomic organization or chromatin state, can in turn modulate local effects. Such multiscale representations reflect the hierarchical nature of genomic function and stand in contrast to the largely flat token hierarchies typically employed in NLP models.
+
+### Encoding biological priors
+
+The original Transformer architecture was explicitly designed for natural language translation, a task characterized by strong sequential structure, directional semantics, and symbolic alignment between inputs and outputs. It is therefore only logical that architectures developed for this domain require adaptation when applied to genomics, where biological meaning arises from physical, chemical, and evolutionary processes rather than linguistic convention.
+
+Some models incorporate evolutionary structure directly, such as AlphaGenome, which conditions on species identity, or GPN-Star, which integrates phylogenetic distances into attention mechanisms. Others depart more radically from language-inspired designs. AlphaFold, for instance, replaces sequence-centric modeling with graph-based architectures that explicitly encode geometric and physical constraints to predict protein structure. Similarly, ESM combines large-scale protein sequence modeling with structure- and function-aware objectives, enabling multimodal representations that bridge evolutionary, functional, and structural information.
+
+### Interpretability
+
+Modern deep learning models, and transformers in particular, are often criticized as black boxes. In many NLP applications, this opacity is tolerated because the underlying system being modeled, human language, is already well understood. In genomics, the situation is reversed. The biological systems we aim to model are themselves only partially understood, making interpretability not a luxury but a necessity.
+
+Interpretability in NLP often centers on latent representations or attention patterns. In genomics, interpretation is typically operationalized through in silico perturbation. This involves systematically editing sequences and measuring predicted changes in functional outputs. Common approaches include single-variant effect prediction, pairwise perturbations to probe epistatic interactions, and attention-based attribution methods. Such analyses require models whose predictions respond locally and coherently to small sequence edits.
+
+Beyond perturbation, recent work suggests that mechanistic interpretability techniques may also be fruitful in genomics. Approaches such as sparse autoencoders and circuit analysis have been applied to large biological language models. Notably, InterPLM demonstrated that sparse autoencoders trained on internal representations of ESM-2 and can recover interpretable biological features. Similar work on Evo 2 extracted biologically meaningful features (see illustration of process in <FigRef id={10} />) including exon–intron boundaries, transcription factor binding sites, protein structural elements, and prophage genomic regions from the activation space of the transformer backbone.
+
+<Figure
+    id={10} 
+    src="/blogs/glms/sae_evo.png"
+    alt="Using sparse autoencoders (SAEs) to extract features associated with interpretable biological function that can be used for annotation, discovery, and steering of sequence generations in Evo 2."
+    caption="Using sparse autoencoders (SAEs) to extract features associated with interpretable biological function that can be used for annotation, discovery, and steering of sequence generations in Evo 2."
+/>
+
+## Training
+
+### Tokenization and resolution
+
+The question of tokenization plays a different role in genomics than in NLP. In language, tokenization is largely an engineering choice that trades semantic granularity for computational efficiency. In genomics, tokenization directly determines the resolution at which sequence variation and function can be modeled.
+
+There is broad consensus that nucleotide-level representations are the most faithful, as they preserve mutation-level information and avoid imposing assumptions about higher-order structure. For this reason, most genomic models operate directly on single nucleotides, and protein models operate at the amino-acid level. Higher-level tokenizations, such as k-mers, are sometimes used primarily for computational efficiency, as they reduce sequence length and memory requirements. Models such as NucleotideTransformer, which tokenize fixed-length k-mers, exemplify this trade-off (see <FigRef id={11} />).
+
+<Figure
+    id={11} 
+    src="/blogs/glms/masking_nt.png"
+    alt="Tokenization of k-mers (k=6) in Nucleotide Transformer"
+    caption="Tokenization of k-mers (k=6) in Nucleotide Transformer"
+/>
+
+### Scaling laws are domain-dependent
+
+As famously shown in <FigRef id={12} />, scaling laws describe the empirical observation that, in NLP, model performance improves predictably with increased data, parameters, and compute. These regularities have been central to the success of large language models. However, scaling laws that hold remarkably well in NLP do not transfer cleanly to genomics. Protein language models often exhibit relatively smooth scaling behavior, reflecting the dense functional constraint of amino acid sequences, but whole-genome modeling operates in a fundamentally different regime. Genomic sequences are orders of magnitude longer, functional signal is sparse, and entropy is high.
+
+<Figure
+    id={12} 
+    src="/blogs/glms/scaling_laws.png"
+    alt="Language modeling performance improves smoothly with increases in model size, training dataset size, and total training compute. To achieve optimal performance, these three factors must be scaled jointly rather than in isolation. When none of the factors is limiting, empirical performance follows a power-law relationship with respect to each variable individually, called scaling laws (Kaplan et al.,2020)."
+    caption="Language modeling performance improves smoothly with increases in model size, training dataset size, and total training compute. To achieve optimal performance, these three factors must be scaled jointly rather than in isolation. When none of the factors is limiting, empirical performance follows a power-law relationship with respect to each variable individually, called scaling laws (Kaplan et al.,2020)."
+/>
+
+Empirically, naive scaling of genomic models often yields diminishing returns unless paired with strong inductive biases or task-grounded supervision. Similar patterns have been observed in protein modeling, where increased scale primarily improves structure prediction, while gains in functional or property prediction are far less consistent. These observations suggest that genomic language models should be held to similar scrutiny. Improved likelihood or scale does not automatically translate into improved biological utility.
+
+### Training stages
+
+Modern large language models are typically trained in multiple stages, beginning with large-scale pretraining on raw data, followed by post-training through fine-tuning and, in many cases, reinforcement learning from human feedback (RLHF). This paradigm has proven effective in aligning generative models with human preferences and downstream objectives in NLP.
+
+Genomic models follow a similar but more limited pattern. Most approaches rely on extensive pretraining, after which models are fine-tuned on additional datasets, tasks, species, or experimental conditions. Examples include ProGen and GPN-Star, which adapt pretrained sequence representations for functional or variant-level prediction, as well as Enformer and Borzoi, which are fine-tuned across tissues or species. Distillation is also used in some cases, as in AlphaGenome, to consolidate information from large ensembles into a single model.
+
+In principle, reinforcement learning approaches appear particularly appealing in genomics, as model outputs can often be evaluated through in vitro or in vivo experiments, or approximated using biophysical simulations. In practice, however, convincing evidence for successful RL-based post-training in genomics remains limited. For now, most progress continues to come from improved pretraining objectives, better inductive biases, and carefully designed fine-tuning strategies rather than from explicit reinforcement learning.
+
+# Conclusion
+
+Genomic language models borrow heavily from the success of large language models in NLP, but the analogy is imperfect. As this discussion has shown, DNA differs fundamentally from natural language in how it evolves, how information is distributed, how meaning is interpreted, and how signal relates to function. These differences imply that a direct transfer of NLP recipes is unlikely to be sufficient. Instead, progress in genomics increasingly depends on carefully rethinking each component of the modeling pipeline, including objectives, data selection, architecture, and training, and on introducing inductive biases that reflect biological mechanisms rather hoping for scaling laws to prevail.
+
+At the same time, the direction remains both promising and intuitive. Models that successfully integrate evolutionary information, physical constraints, and functional supervision have already demonstrated remarkable gains across structure prediction, regulatory activity modeling, and variant interpretation. Looking ahead, the prospect of a genuine genomic "world model," one that can generate realistic sequences, explain regulatory and structural mechanisms, and connect genotype to phenotype in a unified framework, would represent a profound shift in our ability to understand and engineer biological systems. Achieving this will likely require moving beyond treating DNA as just another language, while retaining the powerful abstractions that made language models successful in the first place.

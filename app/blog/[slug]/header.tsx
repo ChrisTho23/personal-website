@@ -29,7 +29,7 @@ export const Header: React.FC<Props> = ({ blog }) => {
   return (
     <header
       ref={ref}
-      className="relative isolate overflow-hidden"
+      className="relative z-50 isolate overflow-hidden"
       style={{
         backgroundImage: `url(${blog.picture})`,
         backgroundSize: 'cover',
