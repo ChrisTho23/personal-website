@@ -12,15 +12,21 @@ type TableOfContentsProps = {
 export const TableOfContents: React.FC<TableOfContentsProps> = ({ toc }) => {
   let mainChapterNumber = 0;
   let subChapterNumber = 0;
+  let subSubChapterNumber = 0;
 
   const getChapterNumber = (level: number) => {
     if (level === 1) {
       mainChapterNumber += 1;
       subChapterNumber = 0; // Reset subchapter number
+      subSubChapterNumber = 0; // Reset sub-subchapter number
       return `${mainChapterNumber}.`;
-    } else {
+    } else if (level === 2) {
       subChapterNumber += 1;
+      subSubChapterNumber = 0; // Reset sub-subchapter number
       return `${mainChapterNumber}.${subChapterNumber}`;
+    } else {
+      subSubChapterNumber += 1;
+      return `${mainChapterNumber}.${subChapterNumber}.${subSubChapterNumber}`;
     }
   };
 
@@ -41,13 +47,15 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({ toc }) => {
           const slug = generateSlug(item.title);
 
           return (
-            <li key={index} className={item.level > 1 ? "ml-5" : ""}>
+            <li key={index} className={item.level === 2 ? "ml-5" : item.level === 3 ? "ml-10" : ""}>
               <a 
                 href={`#${slug}`} 
                 className={`block py-1 hover:text-blue-600 hover:underline transition-colors ${
                   item.level === 1 
                     ? "text-base font-medium text-zinc-700" 
-                    : "text-sm text-zinc-500"
+                    : item.level === 2
+                    ? "text-sm text-zinc-500"
+                    : "text-xs text-zinc-400"
                 }`}
               >
                 {chapterNumber} {item.title}
