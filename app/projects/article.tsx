@@ -3,9 +3,10 @@ import Link from "next/link";
 
 type Props = {
 	project: Project;
+	description?: string;
 };
 
-export const Article: React.FC<Props> = ({ project }) => {
+export const Article: React.FC<Props> = ({ project, description }) => {
 	return (
 		<Link href={`/projects/${project.slug}`}>
 			<article className="p-4 md:p-8">
@@ -26,7 +27,7 @@ export const Article: React.FC<Props> = ({ project }) => {
 					{project.title}
 				</h2>
 				<p className="z-20 mt-4 text-sm  duration-1000 text-zinc-400 group-hover:text-zinc-200">
-					{project.description}
+					{description ?? project.description}
 				</p>
 			</article>
 		</Link>
