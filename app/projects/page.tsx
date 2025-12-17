@@ -4,6 +4,7 @@ import { allProjects } from "contentlayer/generated";
 import { Navigation } from "../components/nav";
 import { Card } from "../components/card";
 import { Article } from "./article";
+import { getGithubReadmeDescriptions } from "@/util/github";
 
 export const revalidate = 60;
 export default async function ProjectsPage() {
@@ -23,6 +24,26 @@ export default async function ProjectsPage() {
         new Date(b.date ?? Number.POSITIVE_INFINITY).getTime() -
         new Date(a.date ?? Number.POSITIVE_INFINITY).getTime(),
     );
+
+  // Fetch README descriptions for all projects with repositories
+  const allPublishedProjects = [featured, top2, top3, ...sorted];
+  const repositories = allPublishedProjects
+    .filter((p) => p.repository)
+    .map((p) => p.repository!);
+  const readmeDescriptions = await getGithubReadmeDescriptions(repositories);
+
+  // Helper to get description (frontmatter first, then fallback to README)
+  const getDescription = (project: typeof featured): string => {
+    // Use frontmatter description if available
+    if (project.description) {
+      return project.description;
+    }
+    // Fall back to README description
+    if (project.repository && readmeDescriptions.has(project.repository)) {
+      return readmeDescriptions.get(project.repository)!;
+    }
+    return "No description available.";
+  };
 
   return (
     <div className="relative pb-16">
@@ -62,7 +83,7 @@ export default async function ProjectsPage() {
                   {featured.title}
                 </h2>
                 <p className="mt-4 leading-8 duration-150 text-zinc-400 group-hover:text-zinc-300">
-                  {featured.description}
+                  {getDescription(featured)}
                 </p>
                 <div className="absolute bottom-4 md:bottom-8">
                   <p className="hidden text-zinc-200 hover:text-zinc-50 lg:block">
@@ -76,7 +97,7 @@ export default async function ProjectsPage() {
           <div className="flex flex-col w-full gap-8 mx-auto border-t border-gray-900/10 lg:mx-0 lg:border-t-0 ">
             {[top2, top3].map((project) => (
               <Card key={project.slug}>
-                <Article project={project} />
+                <Article project={project} description={getDescription(project)} />
               </Card>
             ))}
           </div>
@@ -89,7 +110,7 @@ export default async function ProjectsPage() {
               .filter((_, i) => i % 3 === 0)
               .map((project) => (
                 <Card key={project.slug}>
-                  <Article project={project} />
+                  <Article project={project} description={getDescription(project)} />
                 </Card>
               ))}
           </div>
@@ -98,7 +119,7 @@ export default async function ProjectsPage() {
               .filter((_, i) => i % 3 === 1)
               .map((project) => (
                 <Card key={project.slug}>
-                  <Article project={project} />
+                  <Article project={project} description={getDescription(project)} />
                 </Card>
               ))}
           </div>
@@ -107,7 +128,7 @@ export default async function ProjectsPage() {
               .filter((_, i) => i % 3 === 2)
               .map((project) => (
                 <Card key={project.slug}>
-                  <Article project={project} />
+                  <Article project={project} description={getDescription(project)} />
                 </Card>
               ))}
           </div>

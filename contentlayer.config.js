@@ -49,7 +49,7 @@ export const Project = defineDocumentType(() => ({
     },
     description: {
       type: "string",
-      required: true,
+      required: false, // Optional - can be auto-fetched from GitHub README
     },
     date: {
       type: "date",
